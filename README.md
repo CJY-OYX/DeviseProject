@@ -514,4 +514,4 @@ loopAnimation(){
 
 # 写不下去了看视频去吧：
 
-<iframe src="https://player.bilibili.com/player.html?isOutside=true&amp;aid=235025686&amp;bvid=BV1Ne411d7X3&amp;cid=1310805862&amp;p=20" data-src="//player.bilibili.com/player.html?isOutside=true&amp;aid=235025686&amp;bvid=BV1Ne411d7X3&amp;cid=1310805862&amp;p=20" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+https://player.bilibili.com/player.html?isOutside=true&amp;aid=235025686&amp;bvid=BV1Ne411d7X3&amp;cid=1310805862&amp;p=20
