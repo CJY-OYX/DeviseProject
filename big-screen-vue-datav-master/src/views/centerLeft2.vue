@@ -27,33 +27,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#centerLeft1 {
-  $box-width: 300px;
-  $box-height: 410px;
-  padding: 16px;
-  height: $box-height;
-  min-width: $box-width;
-  border-radius: 5px;
-  .bg-color-black {
-    height: $box-height - 30px;
-    border-radius: 10px;
-  }
-  .text {
-    color: #c3cbde;
-  }
-  .dv-dec-1 {
-    position: relative;
-    width: 100px;
-    height: 20px;
-    top: -3px;
-  }
-  .chart-box {
-    margin-top: 16px;
-    width: 170px;
-    height: 170px;
-    .active-ring-name {
-      padding-top: 10px;
-    }
-  }
-}
+@import '../assets/scss/centerLeft2.scss';
 </style>

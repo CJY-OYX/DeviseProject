@@ -53,8 +53,15 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_CREDENTIALS = True
+# 允许所有来源
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_HEADERS = ('*')
+# 明确添加允许的来源
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+]
+CORS_ALLOW_HEADERS = [
+    '*',
+]
 ROOT_URLCONF = "DeviseProject.urls"
 
 TEMPLATES = [

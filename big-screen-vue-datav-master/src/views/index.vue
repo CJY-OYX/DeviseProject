@@ -36,8 +36,11 @@
             </div>
           </div>
           <div class="d-flex aside-width">
-            <div class="react-right bg-color-blue mr-3">
-              <a href="#" class="text fw-b">登录</a>
+            <div class="react-right bg-color-green mr-3" v-if="isLoggedIn">
+              <span class="text fw-b">{{ username }}</span>
+            </div>
+            <div class="react-right bg-color-blue mr-3" v-else>
+              <router-link to="/login" class="text fw-b">登录</router-link>
             </div>
             <div class="react-right mr-4 react-l-s">
               <span class="react-after"></span>
@@ -114,7 +117,9 @@ export default {
       dateYear: null,
       dateWeek: null,
       weekday: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
-      decorationColor: ['#568aea', '#000000']
+      decorationColor: ['#568aea', '#000000'],
+      isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
+      username: localStorage.getItem('username') || ''
     }
   },
   components: {
@@ -129,11 +134,24 @@ export default {
   mounted() {
     this.timeFn()
     this.cancelLoading()
+    // 获取用户名
+    this.username = localStorage.getItem('username') || '';
+    // 监听登录状态变化
+    window.addEventListener('storage', this.handleStorageChange);
   },
-  beforeDestroy () {
+  beforeDestroy() {
     clearInterval(this.timing)
+    window.removeEventListener('storage', this.handleStorageChange);
   },
   methods: {
+    handleStorageChange(event) {
+      if (event.key === 'isLoggedIn') {
+        this.isLoggedIn = event.newValue === 'true';
+      }
+      if (event.key === 'username') {
+        this.username = event.newValue || '';
+      }
+    },
     timeFn() {
       this.timing = setInterval(() => {
         this.dateDay = formatTime(new Date(), 'HH: mm: ss')
