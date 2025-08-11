@@ -1,6 +1,6 @@
 <template>
   <div id="index" ref="appRef">
-    <div class="bg" style="background: url('../../public/VCG41N1312873566.jpg') center/cover no-repeat;position: relative;">
+    <div class="bg" style="background: url('/VCG41N1312873566.jpg') center/cover no-repeat;position: relative;">
       <dv-loading v-if="loading">Loading...</dv-loading>
       <div v-else class="host-body">
         <div class="d-flex jc-center">
@@ -29,7 +29,7 @@
           <div class="d-flex aside-width">
             <div class="react-left ml-4 react-l-s">
               <span class="react-left"></span>
-              <span class="text">数据分析</span>
+              <span class="text">首页</span>
             </div>
             <div class="react-left ml-3">
               <span class="text"></span>
@@ -37,13 +37,11 @@
           </div>
           <div class="d-flex aside-width">
             <div class="react-right bg-color-blue mr-3">
-              <span class="text fw-b">用户：长井元</span>
+              <a href="#" class="text fw-b">登录</a>
             </div>
             <div class="react-right mr-4 react-l-s">
               <span class="react-after"></span>
-              <span class="text"
-                >{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span
-              >
+              <span class="text">{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span>
             </div>
           </div>
         </div>

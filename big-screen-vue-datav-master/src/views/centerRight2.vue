@@ -10,7 +10,7 @@
       <div class="d-flex ai-center flex-column body-box">
         <dv-capsule-chart class="dv-cap-chart" :config="config" v-bind:key="config.data[1].value"
                           style="height: 200px"/>
-        <dv-active-ring-chart :config="configTwo" style="width: 280px;height: 210px" v-bind:key="configTwo.data[0]"/>
+        <dv-active-ring-chart :config="configTwo" style="width: 280px;height: 210px" v-bind:key="configTwo.data[0].name"/>
 
       </div>
     </div>

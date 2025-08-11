@@ -56,7 +56,7 @@
           <icon name="chart-pie" class="text-icon"></icon>
         </span>
         <span class="fs-xl text mx-2 mb-1 pl-3">汽车品牌榜</span>
-        <dv-scroll-ranking-board class="dv-scr-rank-board mt-1" :config="ranking" v-bind:key="ranking.data[0]"/>
+        <dv-scroll-ranking-board class="dv-scr-rank-board mt-1" :config="ranking" v-bind:key="ranking.data[0].value"/>
       </div>
       <div class="percent">
         <div class="item bg-color-black">
@@ -77,7 +77,7 @@
         </div>
         <div class="water" style="text-align: center">
           <p>油电混合比率</p>
-          <dv-water-level-pond class="dv-wa-le-po" :config="water" v-bind:key="water.data[0]"/>
+          <dv-water-level-pond class="dv-wa-le-po" :config="water" v-bind:key="water.data[0].toString()"/>
         </div>
       </div>
     </div>
@@ -151,7 +151,7 @@ export default {
     this.$set(this.rate[0], 'tips', res.data.oilRate)
     this.$set(this.rate[1], 'tips', res.data.electricRare)
     this.$set(this.water, 'data', [res.data.mixRate])
-    console.log(this.water.data)
+    // console.log(this.water.data)
   }
 }
 </script>
