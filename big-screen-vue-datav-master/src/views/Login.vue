@@ -31,8 +31,10 @@
 <script>
 import Vue from 'vue'
 import DataV from '@jiaminghi/data-view'
+import axios from 'axios'
 
 Vue.use(DataV)
+axios.defaults.withCredentials = true
 
 export default {
   data() {
@@ -43,21 +45,27 @@ export default {
     }
   },
   methods: {
-    handleLogin() {
-      // 简单的表单验证
-      if (!this.username || !this.password) {
-        alert('请输入用户名和密码');
-        return;
-      }
-      // 模拟登录成功
-      alert('登录成功');
-      // 存储登录状态和用户名
+    handleLogin () {
+  if (!this.username || !this.password) {
+    alert('请输入用户名和密码')
+    return
+  }
+  axios.post(
+    'http://localhost:8000/myApp/login/',
+    { username: this.username, password: this.password }
+  )
+  .then(res => {
+    if (res.data.success) {
+      alert(res.data.message)
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('username', this.username);
-      // 获取重定向路径
       const redirect = this.$route.query.redirect || '/';
       this.$router.push(redirect);
+    } else {
+      alert(res.data.message)
     }
+  })
+}
   }
 }
 </script>

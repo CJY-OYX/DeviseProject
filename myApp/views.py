@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from .models import User, carInfo, UserCarDetail
 from rest_framework.decorators import api_view
 import json
@@ -15,6 +15,65 @@ from .utils import getCenterChangeData
 from .utils import getBottomRightData
 
 # Create your views here.
+def center(request):
+    if request.method == 'GET':
+        sumCar, highVolume, topCar, mostModel, mostBrand, averagePrice = getCenterData.getBaseData()
+        lastSortList = getCenterData.getRollData()
+        oilRate, electricRare, mixRate = getCenterData.getTypeRate()
+        return JsonResponse({
+            'sumCar': sumCar,
+            'highVolume': highVolume,
+            'topCar': topCar,
+            'mostModel': mostModel,
+            'mostBrand': mostBrand,
+            'averagePrice': averagePrice,
+            'lastSortList': lastSortList,
+            'oilRate': oilRate,
+            'electricRare': electricRare,
+            'mixRate': mixRate,
+        })
+
+def centerLeft(request):
+    if request.method == 'GET':
+        lastPieList = getCenterLeftData.getPieBrandData()
+        return JsonResponse({
+            'lastPieList': lastPieList,
+        })
+
+def bottomLeft(request):
+    if request.method == 'GET':
+        brandList, volumeList, priceList = getBottomLeftData.getSquareData()
+        return JsonResponse({
+            'brandList': brandList,
+            'volumeList': volumeList,
+            'priceList': priceList,
+        })
+
+def centerRight(request):
+    if request.method == 'GET':
+        realData = getCenterRightData.getPriceSortData()
+        return JsonResponse({
+            'realData': realData,
+        })
+
+def centerRightChange(request, energyType):
+    if request.method == 'GET':
+        oilData, electricData = getCenterChangeData.getCircleData()
+        realData = []
+        if energyType == 1:
+            realData = oilData
+        else:
+            realData = electricData
+        return JsonResponse({
+            'realData': realData,
+        })
+
+def bottomRight(request):
+    if request.method == 'GET':
+        carData = getBottomRightData.getRankData()
+        return JsonResponse({
+            'carData': carData,
+        })
 
 @csrf_exempt
 @api_view(['GET'])
@@ -81,7 +140,6 @@ def save_user_car_detail(request):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
 
-
 @csrf_exempt
 def register(request):
     if request.method == 'POST':
@@ -131,63 +189,35 @@ def register(request):
     else:
         return JsonResponse({'success': False, 'message': '不支持GET请求'})
 
-def center(request):
-    if request.method == 'GET':
-        sumCar, highVolume, topCar, mostModel, mostBrand, averagePrice = getCenterData.getBaseData()
-        lastSortList = getCenterData.getRollData()
-        oilRate, electricRare, mixRate = getCenterData.getTypeRate()
-        return JsonResponse({
-            'sumCar': sumCar,
-            'highVolume': highVolume,
-            'topCar': topCar,
-            'mostModel': mostModel,
-            'mostBrand': mostBrand,
-            'averagePrice': averagePrice,
-            'lastSortList': lastSortList,
-            'oilRate': oilRate,
-            'electricRare': electricRare,
-            'mixRate': mixRate,
-        })
+from django.contrib.auth import authenticate
 
-def centerLeft(request):
+@csrf_exempt
+def login(request):
     if request.method == 'GET':
-        lastPieList = getCenterLeftData.getPieBrandData()
-        return JsonResponse({
-            'lastPieList': lastPieList,
-        })
+        return JsonResponse({'detail': 'send POST to login'})
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+            user = User.objects.get(username=username)
 
-def bottomLeft(request):
-    if request.method == 'GET':
-        brandList, volumeList, priceList = getBottomLeftData.getSquareData()
-        return JsonResponse({
-            'brandList': brandList,
-            'volumeList': volumeList,
-            'priceList': priceList,
-        })
+            if user is None:
+                return JsonResponse({'success': False, 'message': '用户名或密码错误'})
+            else:
+                # 可以在这里添加登录状态保持逻辑，如使用session或token
+                return JsonResponse({'success': True, 'message': '登录成功','username': username})
+        except Exception as e:
+            # 输出详细错误信息用于调试
+            print(f"Login error: {str(e)}")
+            return JsonResponse({'success': False, 'message': f'登录失败: {str(e)}'})
 
-def centerRight(request):
-    if request.method == 'GET':
-        realData = getCenterRightData.getPriceSortData()
-        return JsonResponse({
-            'realData': realData,
-        })
+def entry_user_info(request):
+    if request.method == 'POST':
+        try:
+            data = carInfo.objects.get(carName=request.POST['carName'])
+            return HttpResponse('UserInfoDetail.vue',{'data': data})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
 
-def centerRightChange(request, energyType):
-    if request.method == 'GET':
-        oilData, electricData = getCenterChangeData.getCircleData()
-        realData = []
-        if energyType == 1:
-            realData = oilData
-        else:
-            realData = electricData
-        return JsonResponse({
-            'realData': realData,
-        })
-
-def bottomRight(request):
-    if request.method == 'GET':
-        carData = getBottomRightData.getRankData()
-        return JsonResponse({
-            'carData': carData,
-        })
 

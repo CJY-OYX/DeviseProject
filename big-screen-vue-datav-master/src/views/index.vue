@@ -106,6 +106,7 @@ import centerRight2 from './centerRight2'
 import center from './center'
 import bottomLeft from './bottomLeft'
 import bottomRight from './bottomRight'
+// import axios from "axios";
 
 export default {
   mixins: [ drawMixin ],
@@ -119,7 +120,6 @@ export default {
       weekday: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
       decorationColor: ['#568aea', '#000000'],
       isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
-      username: localStorage.getItem('username') || ''
     }
   },
   components: {
@@ -163,8 +163,11 @@ export default {
       setTimeout(() => {
         this.loading = false
       }, 500)
-    }
-  }
+    },
+  //   entryInfo(username){
+  //   axios.post('http://localhost:8000/myApp/entry-user-info/', {username:this.username})
+  // },
+  },
 }
 </script>
 

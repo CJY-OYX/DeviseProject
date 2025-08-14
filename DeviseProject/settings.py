@@ -53,15 +53,27 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOWED_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+
+
 # 允许所有来源
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
 # 明确添加允许的来源
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
+    "http://127.0.0.1:8080",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOW_HEADERS = [
-    '*',
+    'content-type',
+    'x-csrftoken',
+    'authorization',
+    'accept',
 ]
 ROOT_URLCONF = "DeviseProject.urls"
 
