@@ -2,8 +2,10 @@ from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import User
+from .models import User, carInfo, UserCarDetail
+from rest_framework.decorators import api_view
 import json
+import datetime
 from .utils import getPublicData
 from .utils import getCenterData
 from .utils import getCenterLeftData
@@ -13,6 +15,72 @@ from .utils import getCenterChangeData
 from .utils import getBottomRightData
 
 # Create your views here.
+
+@csrf_exempt
+@api_view(['GET'])
+def search_cars(request):
+    name = request.GET.get('name', '')
+    if not name:
+        return JsonResponse({'success': False, 'message': '请输入车辆名称'})
+
+    # 在carInfo表中搜索类似匹配的车辆
+    cars = carInfo.objects.filter(carName__icontains=name)
+    car_list = []
+    for car in cars:
+        car_list.append({
+            'id': car.id,
+            'carName': car.carName,
+            'carModel': car.carModel,
+            'brand': car.brand
+        })
+
+    return JsonResponse({'success': True, 'cars': car_list})
+
+@csrf_exempt
+@api_view(['POST'])
+def save_user_car_detail(request):
+    try:
+        data = json.loads(request.body)
+        user_id = data.get('userId')
+        car_name = data.get('carName')
+        car_model = data.get('carModel')
+        mileage = data.get('mileage')
+        purchase_date = data.get('purchaseDate')
+        configuration = data.get('configuration')
+
+        if not all([user_id, car_name, car_model, mileage, purchase_date, configuration]):
+            return JsonResponse({'success': False, 'message': '请填写所有字段'})
+
+        # 查找用户
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'message': '用户不存在'})
+
+        # 尝试查找车辆
+        car = None
+        try:
+            car = carInfo.objects.get(carName=car_name, carModel=car_model)
+        except carInfo.DoesNotExist:
+            # 车辆不存在，仍然可以保存，但car字段为null
+            pass
+
+        # 创建或更新用户车辆详情
+        user_car_detail = UserCarDetail(
+            user=user,
+            car=car,
+            car_name=car_name,
+            car_model=car_model,
+            mileage=mileage,
+            purchase_date=datetime.datetime.strptime(purchase_date, '%Y-%m-%d').date(),
+            configuration=configuration
+        )
+        user_car_detail.save()
+
+        return JsonResponse({'success': True, 'message': '车辆详情保存成功'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
 
 @csrf_exempt
 def register(request):
@@ -57,7 +125,7 @@ def register(request):
             user = User(username=username, password=password)
             user.save()
 
-            return JsonResponse({'success': True, 'message': '注册成功'})
+            return JsonResponse({'success': True, 'message': '注册成功', 'userId': user.id})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
     else:

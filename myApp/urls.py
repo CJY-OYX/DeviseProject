@@ -8,4 +8,6 @@ urlpatterns = [
     path("centerRight/", views.centerRight,name="centerRight"),
     path("centerRightChange/<int:energyType>", views.centerRightChange,name="centerRightChange"),
     path("bottomRight/", views.bottomRight,name="bottomRight"),
+    path("search-cars/", views.search_cars, name="search_cars"),
+    path("save-user-car-detail/", views.save_user_car_detail, name="save_user_car_detail"),
 ]

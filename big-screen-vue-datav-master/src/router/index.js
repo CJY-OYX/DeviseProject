@@ -15,6 +15,10 @@ const routes = [{
   path: '/register',
   name: 'register',
   component: () => import('../views/Register.vue')
+}, {
+  path: '/user-detail-form',
+  name: 'userDetailForm',
+  component: () => import('../views/UserDetailForm.vue')
 }]
 
 const router = new VueRouter({

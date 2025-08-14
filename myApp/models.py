@@ -26,3 +26,17 @@ class User(models.Model):
     createTime = models.DateTimeField('创建时间', auto_now_add=True)
     class Meta:
         db_table = 'user'
+
+# 用户车辆详情
+class UserCarDetail(models.Model):
+    id = models.AutoField('id', primary_key=True)
+    car_name = models.CharField('车辆名字', max_length=255, default='')
+    car_model = models.CharField('车辆型号', max_length=255, default='')
+    mileage = models.FloatField('车辆公里数', default=0)
+    purchase_date = models.DateField('车辆购买时间')
+    configuration = models.TextField('车辆配置', default='')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    car = models.ForeignKey('carInfo', on_delete=models.SET_NULL, null=True, blank=True)
+    createTime = models.DateTimeField('创建时间', auto_now_add=True)
+    class Meta:
+        db_table = 'user_car_detail'

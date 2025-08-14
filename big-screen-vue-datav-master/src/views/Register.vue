@@ -85,9 +85,9 @@ export default {
       })
       .then(response => {
         if (response.data.success) {
-          alert('注册成功，请登录');
-          // 跳转到登录页面
-          this.$router.push('/login');
+          alert('注册成功，请完善车辆信息');
+          // 跳转到用户详情信息填写页，并传递用户ID
+          this.$router.push({ path: '/user-detail-form', query: { userId: response.data.userId } });
         } else {
           alert(response.data.message);
         }
