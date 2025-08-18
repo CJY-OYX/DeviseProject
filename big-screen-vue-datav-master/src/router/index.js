@@ -19,6 +19,10 @@ const routes = [{
   path: '/user-detail-form',
   name: 'userDetailForm',
   component: () => import('../views/UserDetailForm.vue')
+},{
+  path: '/user-detail',
+  name: 'user-detail',
+  component: () => import('../views/UserInfoDetail.vue')
 }]
 
 const router = new VueRouter({

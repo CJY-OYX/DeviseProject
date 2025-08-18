@@ -105,7 +105,7 @@ export default {
         if (response.data.success) {
           alert('车辆详情保存成功');
           // 可以跳转到其他页面，例如首页
-          this.$router.push('/');
+          this.$router.push('/login');
         } else {
           alert(response.data.message);
         }

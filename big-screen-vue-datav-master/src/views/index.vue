@@ -37,7 +37,7 @@
           </div>
           <div class="d-flex aside-width">
             <div class="react-right bg-color-green mr-3" v-if="isLoggedIn">
-              <span class="text fw-b">{{ username }}</span>
+              <span class="text fw-b" @click="entryInfo">{{ username }}</span>
             </div>
             <div class="react-right bg-color-blue mr-3" v-else>
               <router-link to="/login" class="text fw-b">登录</router-link>
@@ -106,7 +106,7 @@ import centerRight2 from './centerRight2'
 import center from './center'
 import bottomLeft from './bottomLeft'
 import bottomRight from './bottomRight'
-// import axios from "axios";
+import axios from "axios";
 
 export default {
   mixins: [ drawMixin ],
@@ -164,9 +164,26 @@ export default {
         this.loading = false
       }, 500)
     },
-  //   entryInfo(username){
-  //   axios.post('http://localhost:8000/myApp/entry-user-info/', {username:this.username})
-  // },
+    entryInfo(){
+    axios.post('http://localhost:8000/myApp/entry-user-info/', {username:this.username})
+        .then(res => {
+          console.log('Response data:', res.data);
+          if (res.data.success){
+            // 使用sessionStorage存储数据
+            sessionStorage.setItem('userData', JSON.stringify(res.data));
+            sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
+            // 导航到用户详情页
+            this.$router.push({ path: '/user-detail' })
+          }
+          else{
+            alert(res.data.message || '请求失败')
+          }
+        })
+        .catch(error => {
+          console.error('Request error:', error);
+          alert('网络请求错误: ' + error.message);
+        })
+  },
   },
 }
 </script>

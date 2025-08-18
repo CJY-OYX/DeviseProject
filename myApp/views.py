@@ -205,18 +205,46 @@ def login(request):
             if user is None:
                 return JsonResponse({'success': False, 'message': '用户名或密码错误'})
             else:
-                # 可以在这里添加登录状态保持逻辑，如使用session或token
                 return JsonResponse({'success': True, 'message': '登录成功','username': username})
         except Exception as e:
-            # 输出详细错误信息用于调试
-            print(f"Login error: {str(e)}")
             return JsonResponse({'success': False, 'message': f'登录失败: {str(e)}'})
 
+@csrf_exempt
 def entry_user_info(request):
     if request.method == 'POST':
         try:
-            data = carInfo.objects.get(carName=request.POST['carName'])
-            return HttpResponse('UserInfoDetail.vue',{'data': data})
+            # 解析请求体中的JSON数据
+            data = json.loads(request.body)
+            username = data.get('username')
+            
+            # 获取用户对象
+            user = User.objects.get(username=username)
+            userid = user.id
+            print(f'用户ID: {userid}')
+            
+            # 查询用户车辆详情
+            users1 = UserCarDetail.objects.filter(user_id=userid).first()
+            print(f'用户车辆详情: {users1}')
+            
+            if not users1:
+                return JsonResponse({'success': False, 'message': '详情信息未填写，即将前往填写页'})
+            
+            # 查询车辆信息
+            car_data = carInfo.objects.filter(id=users1.car_id).values().first()
+            
+            # 准备返回数据
+            userinfo = {
+                'id': users1.id,
+                'user_id': users1.user_id,
+                'car_id': users1.car_id,
+                # 添加其他需要的字段
+            }
+            
+            return JsonResponse({
+                'success': True,
+                'data': car_data,
+                'userinfo': userinfo
+            })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
 
