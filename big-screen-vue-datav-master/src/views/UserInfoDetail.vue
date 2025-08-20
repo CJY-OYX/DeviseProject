@@ -53,6 +53,9 @@
 
               <!-- 新增的车辆详细信息组件 -->
               <CarInfo :carInfo="carInfo" />
+
+              <!-- 价格数字翻牌组件 -->
+              <NumInfo :carInfo="carInfo" />
             </div>
 
             <!-- 车辆信息 -->
@@ -74,6 +77,7 @@ import axios from "axios";
 /* eslint-disable no-unused-vars */
 import CarImg from '../components/CarImg.vue'
 import CarInfo from '../components/CarInfo.vue'
+import NumInfo from '../components/NumInfo.vue'
 import UserCarInfo from '../components/UserCarInfo.vue'
 import UserCarDetail from '../components/UserCarDetail.vue';
 /* eslint-enable no-unused-vars */
@@ -85,6 +89,7 @@ export default {
   components: {
     CarImg,
     CarInfo,
+    NumInfo,
     UserCarInfo,
     UserCarDetail
   },

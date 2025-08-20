@@ -13,6 +13,7 @@ from .utils import getBottomLeftData
 from .utils import getCenterRightData
 from .utils import getCenterChangeData
 from .utils import getBottomRightData
+import re
 
 # Create your views here.
 def center(request):
@@ -295,7 +296,11 @@ def get_car_info(request):
         
         # 查询车辆信息
         car = carInfo.objects.get(id=user_car_detail.car_id)
-        
+        s = car.price.replace('[','').replace(']','').replace(' ','').split(',')
+        newprice = []
+        for i in s:
+            newprice.append(float(i))
+
         # 准备车辆信息
         car_info = {
             'id': car.id,
@@ -309,7 +314,8 @@ def get_car_info(request):
             'carModel': car.carModel,
             'energyType': car.energyType,
             'marketTime': car.marketTime,
-            'insure': car.insure
+            'insure': car.insure,
+            'newprice': newprice
         }
         
         return JsonResponse({'success': True, 'carInfo': car_info})

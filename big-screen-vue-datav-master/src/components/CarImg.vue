@@ -1,6 +1,6 @@
 <template>
   <div class="info-card">
-    <dv-border-box-8 class="info-card-border">
+    <!-- <dv-border-box-8 class="info-card-border"> -->
       <div v-if="carInfo" class="data-container">
         <div class="car-image-container" v-if="carInfo.carImg">
           <img :src="carInfo.carImg" alt="车辆图片" class="car-image">
@@ -15,7 +15,8 @@
       <div v-else class="no-data">
         <p>加载车辆信息中...</p>
       </div>
-    </dv-border-box-8>
+      <dv-decoration-8 style="width:100%;height:50px;" />
+    <!-- </dv-border-box-8> -->
   </div>
 </template>
 
@@ -36,7 +37,6 @@ export default {
     }
   },
   mounted() {
-    console.log('组件挂载时的CarInfo数据:', this.carInfo);
   }
 }
 </script>

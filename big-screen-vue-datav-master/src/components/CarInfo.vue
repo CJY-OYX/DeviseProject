@@ -28,7 +28,7 @@ export default {
       // 过滤掉carImg和carName字段
       if (!this.carInfo) return {}
       // eslint-disable-next-line no-unused-vars
-      const { carImg, carName, id, price,rank, ...rest } = this.carInfo
+      const { carImg, carName, id, price,rank, newprice, ...rest } = this.carInfo
       return rest
     }
   },
@@ -37,12 +37,8 @@ export default {
       // 字段名到注释的映射
       const fieldComments = {
         'brand': '品牌',
-        'carName': '车名',
-        'carImg': '图片链接',
         'saleVolume': '销量',
-        'price': '价格',
         'manufacturer': '厂商',
-        'rank': '排名',
         'carModel': '车型',
         'energyType': '能源类型',
         'marketTime': '上市时间',
