@@ -46,53 +46,20 @@
 
         <div class="body-box">
           <div class="content-box">
-            <!-- 用户基本信息 -->
-            <div class="info-card">
-              <dv-border-box-8 class="info-card-border">
-                <h3 class="info-title">用户基本信息</h3>
-                <div v-if="userInfo" class="data-container">
-                    <div class="data-item" v-for="(value, key) in userInfo" :key="key">
-                      <span class="data-label">{{ formatKey(key) }}:</span>
-                      <span class="data-value">{{ value }}</span>
-                    </div>
-                  </div>
-                <div v-else class="no-data">
-                  <p>加载用户信息中...</p>
-                </div>
-              </dv-border-box-8>
+                <!-- 车辆图片和详细信息 -->
+            <div class="car-container">
+              <!-- 车辆图片信息 -->
+              <CarImg :carInfo="carInfo" />
+
+              <!-- 新增的车辆详细信息组件 -->
+              <CarInfo :carInfo="carInfo" />
             </div>
 
             <!-- 车辆信息 -->
-            <div class="info-card">
-              <dv-border-box-6 class="info-card-border">
-                <h3 class="info-title">车辆信息</h3>
-                <div v-if="carInfo" class="data-container">
-                    <div class="data-item" v-for="(value, key) in carInfo" :key="key">
-                      <span class="data-label">{{ formatKey(key) }}:</span>
-                      <span class="data-value">{{ value }}</span>
-                    </div>
-                  </div>
-                <div v-else class="no-data">
-                  <p>加载车辆信息中...</p>
-                </div>
-              </dv-border-box-6>
-            </div>
+            <UserCarInfo :carInfo="carInfo" />
 
             <!-- 用户车辆详情 -->
-            <div class="info-card">
-              <dv-border-box-12 class="info-card-border">
-                <h3 class="info-title">用户车辆详情</h3>
-                <div v-if="userCarDetail" class="data-container">
-                    <div class="data-item" v-for="(value, key) in userCarDetail" :key="key">
-                      <span class="data-label">{{ formatKey(key) }}:</span>
-                      <span class="data-value">{{ value }}</span>
-                    </div>
-                  </div>
-                <div v-else class="no-data">
-                  <p>加载用户车辆详情中...</p>
-                </div>
-              </dv-border-box-12>
-            </div>
+            <UserCarDetail :userCarDetail="userCarDetail" />
           </div>
         </div>
       </div>
@@ -104,9 +71,23 @@
 import drawMixin from "../utils/drawMixin";
 import { formatTime } from '../utils/index.js'
 import axios from "axios";
+/* eslint-disable no-unused-vars */
+import CarImg from '../components/CarImg.vue'
+import CarInfo from '../components/CarInfo.vue'
+import UserCarInfo from '../components/UserCarInfo.vue'
+import UserCarDetail from '../components/UserCarDetail.vue';
+/* eslint-enable no-unused-vars */
+
+
 
 export default {
   mixins: [ drawMixin ],
+  components: {
+    CarImg,
+    CarInfo,
+    UserCarInfo,
+    UserCarDetail
+  },
   data() {
     return {
       timing: null,
@@ -121,7 +102,7 @@ export default {
       userCarDetail: null,
       username: localStorage.getItem('username') || '',
       isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
-      isHomePage: this.$route.path === '/'
+      isHomePage: this.$route.path === '/' 
     }
   },
   mounted() {
@@ -216,12 +197,6 @@ export default {
         console.error('请求用户车辆详情失败:', error);
       });
     },
-    formatKey(key) {
-        // 将蛇形命名转换为驼峰命名并首字母大写
-        return key.replace(/([A-Z])/g, ' $1')
-                  .replace(/^./, function(str) { return str.toUpperCase(); })
-                  .replace(/_/g, ' ');
-      },
       goToHome() {
         this.$router.push('/');
       }
@@ -232,100 +207,4 @@ export default {
 <style lang="scss" scoped>
 // @import '../assets/scss/index.scss';
 @import '../assets/scss/user-info-detail.scss';
-
-#userInfoDetail {
-  color: #d3d6dd;
-  width: 1920px;
-  height: 1080px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  transform-origin: left top;
-  overflow: hidden;
-}
-
-.host-body {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.body-box {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  
-  .content-box {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  padding: 20px;
-  justify-content: space-between;
-}
-
-.info-card {
-  flex: 1 1 calc(33.333% - 20px);
-  min-width: 300px;
-  box-sizing: border-box;
-}
-
-.info-card-border {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.data-container {
-  flex: 1;
-  overflow-y: auto;
-  max-height: calc(100% - 50px);
-  padding: 15px;
-}
-
-.data-item {
-  display: flex;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
-}
-
-.data-label {
-  flex: 0 0 120px;
-  font-weight: bold;
-  color: #8cc5ff;
-}
-
-.data-value {
-  flex: 1;
-  color: #fff;
-  word-break: break-word;
-}
-
-.no-data {
-  text-align: center;
-  padding: 30px 0;
-  color: #999;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-}
-
-
-
-@media (max-width: 1200px) {
-  .info-card {
-    flex: 1 1 calc(50% - 20px);
-  }
-}
-
-@media (max-width: 768px) {
-  .info-card {
-    flex: 1 1 100%;
-  }
-}
 </style>

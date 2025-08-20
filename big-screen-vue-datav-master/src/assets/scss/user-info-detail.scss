@@ -1,10 +1,34 @@
 .bg-color-green {
-  background-color: #2ecc71;
+  background-color: #2ecc71 !important;
   color: white;
-  padding: 5px 15px;
   border-radius: 4px;
   text-decoration: none;
   display: inline-block;
+}
+
+// 文本悬停效果公共类
+.text-hover-effect {
+  &:hover {
+    text-decoration: underline;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  }
+}
+
+// 反应按钮基础样式
+.react-button {
+  font-size: 18px;
+  width: 300px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  position: relative;
+  background-color: #0f1325;
+
+  .text {
+    display: inline-block;
+    color: white;
+    @extend .text-hover-effect;
+  }
 }
 
 #userInfoDetail {
@@ -19,10 +43,11 @@
   overflow: hidden;
   
   .info-title {
-  color: #fff;
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 18px;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+    padding: 15px;
   }
 
   .bg {
@@ -39,64 +64,61 @@
     flex-direction: column;
 
     .dv-dec-6 {
-        position: absolute;
-        bottom: -30px;
-        left: 50%;
-        width: 250px;
-        height: 8px;
-        transform: translate(-50%);
-      }
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      width: 250px;
+      height: 8px;
+      transform: translate(-50%);
+    }
 
     .dv-dec-8 {
       width: 200px;
       height: 50px;
     }
 
-      .title {
+    .title {
       position: relative;
       width: 500px;
       text-align: center;
       background-size: cover;
       background-repeat: no-repeat;
-      }
+    }
 
-      .title-text {
-        font-size: 24px;
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translate(-50%);
-      }
+    .title-text {
+      font-size: 24px;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%);
+    }
 
     .dv-dec-10,
     .dv-dec-10-s {
       width: 33.3%;
       height: 5px;
-      }
+    }
 
     .dv-dec-10-s {
       transform: rotateY(180deg);
-      }
+    }
 
     .aside-width {
       width: 40%;
     }
 
-    .react-r-s,
     .react-l-s {
       background-color: #0f1325;
     }
 
     .react-right {
+      @extend .react-button;
+      transform: skewX(-45deg);
+
       &.react-l-s {
         text-align: right;
         width: 500px;
       }
-      font-size: 18px;
-      width: 300px;
-      line-height: 50px;
-      text-align: center;
-      transform: skewX(-45deg);
 
       .react-after {
         position: absolute;
@@ -107,30 +129,20 @@
         background-color: #0f1325;
         transform: skewX(45deg);
       }
-      .text .router-link,
+
       .text {
-        display: inline-block;
         transform: skewX(45deg);
-        color: white;
-        &:hover {
-        text-decoration: underline; // 下划线效果
-        text-shadow: 0 0 5px rgba(255, 255, 255, 0.8); // 阴影效果，可根据需要调整参数
-    }
       }
     }
 
     .react-left {
+      @extend .react-button;
+      transform: skewX(45deg);
+
       &.react-l-s {
         width: 500px;
         text-align: left;
       }
-      font-size: 18px;
-      width: 300px;
-      height: 50px;
-      line-height: 50px;
-      text-align: center;
-      transform: skewX(45deg);
-      background-color: #0f1325;
 
       .react-left {
         position: absolute;
@@ -143,55 +155,29 @@
       }
 
       .text {
-        display: inline-block;
         transform: skewX(-45deg);
-        display: inline-block;
-        color: white;
-        &:hover {
-          text-decoration: underline; // 下划线效果
-          text-shadow: 0 0 5px rgba(255, 255, 255, 0.8); // 阴影效果，可根据需要调整参数
-        }
       }
-    }
-    
-    .info-title {
-      padding: 15px;
-    }
-
-    .data-container {
-      padding: 20px;
-      }
-
-    .data-item {
-      display: flex;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
-
-      &:last-child {
-        border-bottom: none;
-      }
-    }
-
-    .data-label {
-      flex: 0 0 150px;
-      font-weight: bold;
-      color: #8cc5ff;
-    }
-
-    .data-value {
-      flex: 1;
-      color: #fff;
-    }
-
-    .no-data {
-      text-align: center;
-      padding: 40px;
-      color: #999;
-      background-color: rgba(0, 0, 0, 0.2);
-      border-radius: 8px;
     }
   }
 
-
+  .body-box {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    
+    .content-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    justify-content: space-between;
+    flex: 1;
+    height: 100%;
+    .car-container {
+      min-width: 300px;
+      flex: 1 1 calc(33.333% - 20px);
+    }
+    }
+  }
 }

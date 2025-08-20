@@ -1,0 +1,76 @@
+// CarInfo组件样式
+
+// 信息卡片容器样式
+.info-card {
+  flex: 1 1 calc(33.333% - 20px);
+  min-width: 300px;
+  box-sizing: border-box;
+}
+
+.info-title {
+  display: center;
+}
+
+// 卡片边框样式
+.info-card-border {
+  padding: 15px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+// 数据容器样式
+.data-container {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100% - 50px);
+  padding: 15px;
+}
+
+// 数据项样式
+.data-item {
+  display: flex;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+// 数据标签样式
+.data-label {
+  flex: 0 0 120px;
+  font-weight: bold;
+  color: #8cc5ff;
+}
+
+// 数据值样式
+.data-value {
+  flex: 1;
+  color: #fff;
+  word-break: break-word;
+}
+
+// 无数据状态样式
+.no-data {
+  text-align: center;
+  padding: 30px 0;
+  color: #999;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 响应式布局
+@media (max-width: 1200px) {
+  .info-card {
+    flex: 1 1 calc(50% - 20px);
+  }
+}
+
+@media (max-width: 768px) {
+  .info-card {
+    flex: 1 1 100%;
+  }
+}
