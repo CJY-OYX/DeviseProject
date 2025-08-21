@@ -221,17 +221,17 @@ def entry_user_info(request):
             # 获取用户对象
             user = User.objects.get(username=username)
             userid = user.id
-            print(f'用户ID: {userid}')
             
             # 查询用户车辆详情
             users1 = UserCarDetail.objects.filter(user_id=userid).first()
-            print(f'用户车辆详情: {users1}')
             
             if not users1:
                 return JsonResponse({'success': False, 'message': '详情信息未填写，即将前往填写页'})
             
             # 查询车辆信息
             car_data = carInfo.objects.filter(id=users1.car_id).values().first()
+
+            usercardetail = UserCarDetail.objects.filter(user_id=users1.user_id).values().first()
             
             # 准备返回数据
             userinfo = {
@@ -244,7 +244,10 @@ def entry_user_info(request):
             return JsonResponse({
                 'success': True,
                 'data': car_data,
-                'userinfo': userinfo
+                'userinfo': userinfo,
+                'usercarinfo': usercardetail
+
+
             })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})

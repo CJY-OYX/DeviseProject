@@ -174,10 +174,14 @@ export default {
     axios.post('http://localhost:8000/myApp/entry-user-info/', {username:this.username})
         .then(res => {
           console.log('Response data:', res.data);
+          console.log('usercarinfo:', res.usercarinfo);
+
+
           if (res.data.success){
             // 使用sessionStorage存储数据
             sessionStorage.setItem('userData', JSON.stringify(res.data));
             sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
+            sessionStorage.setItem('userCarInfo', JSON.stringify(res.usercarinfo));
             // 导航到用户详情页
             this.$router.push({ path: '/user-detail' })
           }

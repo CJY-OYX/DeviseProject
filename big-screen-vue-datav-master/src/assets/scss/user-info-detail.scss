@@ -174,7 +174,11 @@
     justify-content: space-between;
     flex: 1;
     height: 100%;
-    .car-container {
+    .carleft {
+      min-width: 300px;
+      flex: 1 1 calc(33.333% - 20px);
+    }
+    .carcenter {
       min-width: 300px;
       flex: 1 1 calc(33.333% - 20px);
     }

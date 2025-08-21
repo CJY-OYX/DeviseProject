@@ -47,7 +47,7 @@
         <div class="body-box">
           <div class="content-box">
                 <!-- 车辆图片和详细信息 -->
-            <div class="car-container">
+            <div class="carleft">
               <!-- 车辆图片信息 -->
               <CarImg :carInfo="carInfo" />
 
@@ -59,7 +59,9 @@
             </div>
 
             <!-- 车辆信息 -->
-            <UserCarInfo :carInfo="carInfo" />
+            <div class="carcenter">
+              <UserCarInfo :userCarDetail="userCarDetail" />
+            </div>
 
             <!-- 用户车辆详情 -->
             <UserCarDetail :userCarDetail="userCarDetail" />
@@ -182,6 +184,7 @@ export default {
       }).then(res => {
         if (res.data.success) {
           this.carInfo = res.data.carInfo;
+
         } else {
           console.error('获取车辆信息失败:', res.data.message);
         }
