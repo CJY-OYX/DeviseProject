@@ -1,8 +1,8 @@
 <template>
   <div class="digital-flop-container">
     <dv-border-box-1 class="dv-border-box">
-      <div class="title"><span>已行驶公里数</span></div>
-      <dv-digital-flop :config="config" style="width:auto;height:100px;" />
+      <div class="title"><span>已行驶距离</span></div>
+      <dv-digital-flop :config="config" style="width:auto;height:50px;" />
     </dv-border-box-1>
   </div>
 </template>
@@ -10,7 +10,7 @@
 <script>
 export default {
   props: {
-    userCarDetail: { type: Object, default: null }
+    userCarDetail: { type: Object, required: true }
   },
   data() {
     return {
@@ -21,17 +21,15 @@ export default {
       }
     };
   },
-  watch: {
-    'userCarDetail.mileage': {
-      immediate: true,   // 第一次拿到值也触发
-      handler(val) {
-        const km = Number(val || 0);
-        this.config = {
-          ...this.config,
-          number: [km]
-        };
-      }
-    }
+  mounted() {
+    // 1 秒后再显示真实里程
+    setTimeout(() => {
+      const km = Number(this.userCarDetail?.mileage || 0);
+      this.config = {
+        ...this.config,
+        number: [km]
+      };
+    }, 1000);   // 需要 5 秒就写 5000
   }
 };
 </script>
@@ -44,7 +42,7 @@ export default {
   align-items: center;
 }
 .dv-border-box {
-  height: 150px;
+  height: 100px;
   align-items: center;
   .title {
   width: 100%;

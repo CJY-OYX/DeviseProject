@@ -178,11 +178,9 @@ export default {
 
 
           if (res.data.success){
-            // 使用sessionStorage存储数据
             sessionStorage.setItem('userData', JSON.stringify(res.data));
             sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
             sessionStorage.setItem('userCarInfo', JSON.stringify(res.usercarinfo));
-            // 导航到用户详情页
             this.$router.push({ path: '/user-detail' })
           }
           else{

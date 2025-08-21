@@ -1,6 +1,6 @@
 <template>
   <div class="digital-flop-container">
-    <dv-border-box-11 class="dv-border-box" title="购车指导价">
+    <dv-border-box-11 class="dv-border-box" title="新车指导价">
       <dv-digital-flop :config="config" style="width:auto;height:200px;" />
     </dv-border-box-11>
   </div>
@@ -55,6 +55,7 @@ export default {
   font-size:50px;
 }
 .dv-border-box {
+  // width: auto;
   height: 150px;
   align-items: center;
   font-size: 100px;

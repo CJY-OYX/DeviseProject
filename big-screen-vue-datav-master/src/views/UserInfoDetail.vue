@@ -46,25 +46,16 @@
 
         <div class="body-box">
           <div class="content-box">
-                <!-- 车辆图片和详细信息 -->
             <div class="carleft">
-              <!-- 车辆图片信息 -->
               <CarImg :carInfo="carInfo" />
-
-              <!-- 新增的车辆详细信息组件 -->
-              <CarInfo :carInfo="carInfo" />
-
-              <!-- 价格数字翻牌组件 -->
               <NumInfo :carInfo="carInfo" />
-            </div>
-
-            <!-- 车辆信息 -->
-            <div class="carcenter">
               <UserCarInfo :userCarDetail="userCarDetail" />
+              <CarTimers :carDetail="userCarDetail" :carInfo="carInfo" />
             </div>
-
-            <!-- 用户车辆详情 -->
-            <UserCarDetail :userCarDetail="userCarDetail" />
+            <div class="carcenter">
+              <UserCarDetail :userCarDetail="userCarDetail" />
+              <CarInfo :carInfo="carInfo" />
+            </div>
           </div>
         </div>
       </div>
@@ -82,6 +73,7 @@ import CarInfo from '../components/CarInfo.vue'
 import NumInfo from '../components/NumInfo.vue'
 import UserCarInfo from '../components/UserCarInfo.vue'
 import UserCarDetail from '../components/UserCarDetail.vue';
+import CarTimers from '../components/CarTimers.vue';
 /* eslint-enable no-unused-vars */
 
 
@@ -93,7 +85,8 @@ export default {
     CarInfo,
     NumInfo,
     UserCarInfo,
-    UserCarDetail
+    UserCarDetail,
+    CarTimers
   },
   data() {
     return {
@@ -153,7 +146,7 @@ export default {
           return;
         }
 
-        // 分别获取用户信息、车辆信息和用户车辆详情
+        // 获取用户信息 车辆信息 用户车辆详情
         Promise.all([
           this.fetchUserInfo(),
           this.fetchCarInfo(),
@@ -213,6 +206,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// @import '../assets/scss/index.scss';
 @import '../assets/scss/user-info-detail.scss';
 </style>
