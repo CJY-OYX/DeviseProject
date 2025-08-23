@@ -30,7 +30,7 @@
               <span class="text" @click="goToHome">首页</span>
             </div>
             <div class="react-left ml-3">
-              <span class="text">PK</span>
+              <span class="text">编辑</span>
             </div>
           </div>
           <div class="d-flex aside-width">
@@ -54,7 +54,7 @@
             </div>
             <div class="carcenter">
               <UserCarDetail :userCarDetail="userCarDetail" />
-              <CarInfo :carInfo="carInfo" />
+              <CarInfo :carInfo="carInfo" :userCarDetail="userCarDetail"/>
             </div>
           </div>
         </div>

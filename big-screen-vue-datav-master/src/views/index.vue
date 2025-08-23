@@ -30,8 +30,8 @@
             <div class="react-left ml-4 react-l-s" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
               <span class="text" @click="goToHome">首页</span>
             </div>
-            <div class="react-left ml-3">
-              <span class="text">PK</span>
+            <div class="react-left ml-3" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }
+              "><span class="text" @click="goToEdit">编辑</span>
             </div>
           </div>
           <div class="d-flex aside-width">
@@ -194,6 +194,56 @@ export default {
   },
   goToHome() {
         this.$router.push('/');
+      },
+      goToEdit() {
+        // 检查是否已登录
+        if (!this.isLoggedIn) {
+          alert('请先登录');
+          this.$router.push('/login');
+          return;
+        }
+
+        // 检查用户名是否存在
+        if (!this.username) {
+          alert('未找到用户名，请先登录');
+          this.$router.push('/login');
+          return;
+        }
+
+        // 根据用户名获取用户和车辆信息
+        axios.post('http://localhost:8000/myApp/entry-user-info/', {username: this.username})
+          .then(res => {
+            if (res.data.success) {
+              const userId = res.data.userinfo?.id;
+              const carId = res.data.usercarinfo?.id;
+
+              if (!userId || !carId) {
+                alert('未找到用户或车辆信息，请先完善用户详情');
+                this.$router.push('/user-detail');
+                return;
+              }
+
+              // 存储用户数据
+              sessionStorage.setItem('userData', JSON.stringify(res.data));
+              sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
+              sessionStorage.setItem('userCarInfo', JSON.stringify(res.data.usercarinfo));
+
+              // 跳转到编辑页面
+              this.$router.push({
+                path: '/user-car-detail-edit',
+                query: {
+                  userId: userId,
+                  carId: carId
+                }
+              });
+            } else {
+              alert(res.data.message || '获取用户信息失败');
+            }
+          })
+          .catch(error => {
+            console.error('获取用户信息错误:', error);
+            alert('网络请求错误: ' + error.message);
+          });
       },
   },
 }
