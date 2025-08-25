@@ -216,6 +216,7 @@ export default {
             if (res.data.success) {
               const userId = res.data.userinfo?.id;
               const carId = res.data.usercarinfo?.id;
+              
 
               if (!userId || !carId) {
                 alert('未找到用户或车辆信息，请先完善用户详情');
@@ -228,13 +229,9 @@ export default {
               sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
               sessionStorage.setItem('userCarInfo', JSON.stringify(res.data.usercarinfo));
 
-              // 跳转到编辑页面
+              // 跳转到编辑页面（不携带参数在URL中）
               this.$router.push({
-                path: '/user-car-detail-edit',
-                query: {
-                  userId: userId,
-                  carId: carId
-                }
+                path: '/user-car-detail-edit'
               });
             } else {
               alert(res.data.message || '获取用户信息失败');

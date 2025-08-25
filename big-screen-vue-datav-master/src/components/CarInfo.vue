@@ -100,7 +100,8 @@ export default {
         'energyType': '能源类型',
         'marketTime': '上市时间',
         'insure': '保修时间',
-        'creteTime': '创建时间'
+        'creteTime': '创建时间',
+        'rank':'排名'
       };
 
       // 如果字段名在映射中存在，则返回对应的注释

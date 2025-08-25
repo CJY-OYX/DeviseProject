@@ -115,8 +115,13 @@ export default {
     // 监听登录状态变化
     window.addEventListener('storage', this.handleStorageChange);
     // 监听路由变化
-    this.$watch('$route', (to) => {
+    this.$watch('$route', (to, from) => {
       this.isHomePage = to.path === '/';
+      // 当从编辑页面返回时，重新获取数据
+      if (from.name === 'userCarDetailEdit' && to.name === 'user-detail') {
+        console.log('从编辑页面返回详情页，重新获取数据');
+        this.fetchUserData();
+      }
     });
   },
   beforeDestroy() {
@@ -141,6 +146,7 @@ export default {
       }, 1000);
     },
     fetchUserData() {
+        console.log('开始获取用户数据...');
         if (!this.username) {
           this.loading = false;
           return;
@@ -152,6 +158,7 @@ export default {
           this.fetchCarInfo(),
           this.fetchUserCarDetail()
         ]).then(() => {
+          console.log('数据获取完成，userCarDetail:', this.userCarDetail);
           this.loading = false;
         }).catch(error => {
           console.error('获取数据失败:', error);
@@ -186,17 +193,23 @@ export default {
       });
     },
     fetchUserCarDetail() {
-      return axios.post('http://localhost:8000/myApp/get-user-car-detail/', {
-        username: this.username
-      }).then(res => {
-        if (res.data.success) {
-          this.userCarDetail = res.data.userCarDetail;
-        } else {
-          console.error('获取用户车辆详情失败:', res.data.message);
-        }
-      }).catch(error => {
-        console.error('请求用户车辆详情失败:', error);
-      });
+      console.log('【1】开始调用 /get-user-car-detail');
+      return axios
+        .post('http://localhost:8000/myApp/get-user-car-detail/', {
+          username: this.username
+        })
+        .then(res => {
+          console.log('【2】接口返回：', res.data);
+          if (res.data.success) {
+            this.userCarDetail = res.data.userCarDetail;
+            console.log('【3】已写入 this.userCarDetail', this.userCarDetail);
+          } else {
+            console.error('获取用户车辆详情失败：', res.data.message);
+          }
+        })
+        .catch(err => {
+          console.error('请求用户车辆详情失败：', err);
+        });
     },
       goToHome() {
         this.$router.push('/');

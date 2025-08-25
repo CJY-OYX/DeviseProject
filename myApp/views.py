@@ -125,17 +125,30 @@ def save_user_car_detail(request):
             # 车辆不存在，仍然可以保存，但car字段为null
             pass
 
-        # 创建或更新用户车辆详情
-        user_car_detail = UserCarDetail(
-            user=user,
-            car=car,
-            car_name=car_name,
-            car_model=car_model,
-            mileage=mileage,
-            purchase_date=datetime.datetime.strptime(purchase_date, '%Y-%m-%d').date(),
-            configuration=configuration
-        )
-        user_car_detail.save()
+        # 尝试查找现有记录
+        user_car_detail = UserCarDetail.objects.filter(user=user).first()
+        
+        if user_car_detail:
+            # 更新现有记录
+            user_car_detail.car = car
+            user_car_detail.car_name = car_name
+            user_car_detail.car_model = car_model
+            user_car_detail.mileage = mileage
+            user_car_detail.purchase_date = datetime.datetime.strptime(purchase_date, '%Y-%m-%d').date()
+            user_car_detail.configuration = configuration
+            user_car_detail.save()
+        else:
+            # 创建新记录
+            user_car_detail = UserCarDetail(
+                user=user,
+                car=car,
+                car_name=car_name,
+                car_model=car_model,
+                mileage=mileage,
+                purchase_date=datetime.datetime.strptime(purchase_date, '%Y-%m-%d').date(),
+                configuration=configuration
+            )
+            user_car_detail.save()
 
         return JsonResponse({'success': True, 'message': '车辆详情保存成功'})
     except Exception as e:
@@ -217,27 +230,37 @@ def entry_user_info(request):
             # 解析请求体中的JSON数据
             data = json.loads(request.body)
             username = data.get('username')
+            user_id = data.get('user_id')
+            id = data.get('id')
             
             # 获取用户对象
-            user = User.objects.get(username=username)
+            if username:
+                user = User.objects.get(username=username)
+            elif user_id:
+                user = User.objects.get(id=user_id)
+            elif id:
+                user = User.objects.get(id=id)
+            else:
+                return JsonResponse({'success': False, 'message': '请提供用户名或用户ID'})
+            
             userid = user.id
             
             # 查询用户车辆详情
-            users1 = UserCarDetail.objects.filter(user_id=userid).first()
+            userCarDetail = UserCarDetail.objects.filter(user_id=userid).first()
             
-            if not users1:
+            if not userCarDetail:
                 return JsonResponse({'success': False, 'message': '详情信息未填写，即将前往填写页'})
             
             # 查询车辆信息
-            car_data = carInfo.objects.filter(id=users1.car_id).values().first()
+            car_data = carInfo.objects.filter(id=userCarDetail.car_id).values().first()
 
-            usercardetail = UserCarDetail.objects.filter(user_id=users1.user_id).values().first()
+            usercardetail = UserCarDetail.objects.filter(user_id=userid).values().first()
             
             # 准备返回数据
             userinfo = {
-                'id': users1.id,
-                'user_id': users1.user_id,
-                'car_id': users1.car_id,
+                'id': userCarDetail.id,
+                'user_id': userCarDetail.user_id,
+                'car_id': userCarDetail.car_id,
                 # 添加其他需要的字段
             }
             
@@ -247,8 +270,9 @@ def entry_user_info(request):
                 'userinfo': userinfo,
                 'usercarinfo': usercardetail
 
-
             })
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'User matching query does not exist.'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
 
@@ -347,6 +371,14 @@ def get_user_car_detail(request):
         
         if not user_car_detail:
             return JsonResponse({'success': False, 'message': '未找到用户车辆详情'})
+
+        car = getattr(user_car_detail, 'car', None)
+        price_range = [6.78, 11.38]
+        if car and car.price:
+            try:
+                price_range = [float(x) for x in car.price.strip('[]').split(',')]
+            except Exception:
+                pass
         
         # 准备用户车辆详情
         car_detail = {
@@ -354,12 +386,62 @@ def get_user_car_detail(request):
             'car_name': user_car_detail.car_name,
             'car_model': user_car_detail.car_model,
             'mileage': user_car_detail.mileage,
-            'purchase_date': user_car_detail.purchase_date.strftime('%Y-%m-%d'),
+            'purchaseDate': user_car_detail.purchase_date.isoformat(),
             'configuration': user_car_detail.configuration,
-            'createTime': user_car_detail.createTime.strftime('%Y-%m-%d %H:%M:%S')
+            'createTime': user_car_detail.createTime.strftime('%Y-%m-%d %H:%M:%S'),
+            'priceRange':price_range,
         }
         
         return JsonResponse({'success': True, 'userCarDetail': car_detail})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'message': '用户不存在'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+@api_view(['POST'])
+def if_user_car_detail(request):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username')
+        
+        if not username:
+            return JsonResponse({'success': False, 'message': '用户名不能为空'})
+        
+        # 获取用户对象
+        user = User.objects.get(username=username)
+        userid = user.id
+        
+        # 查询用户车辆详情
+        user_car_detail = UserCarDetail.objects.filter(user_id=userid).first()
+        
+        if not user_car_detail:
+            return JsonResponse({'success': False, 'message': '未找到用户车辆详情'})
+        
+        # 查询关联的车辆信息
+        car_data = None
+        if user_car_detail.car_id:
+            car_data = carInfo.objects.filter(id=user_car_detail.car_id).values().first()
+        
+        # 准备返回数据
+        result = {
+            'success': True,
+            'userid': userid,
+            'user_car_detail': {
+                'id': user_car_detail.id,
+                'user_id': user_car_detail.user_id,
+                'car_id': user_car_detail.car_id,
+                'car_name': user_car_detail.car_name,
+                'car_model': user_car_detail.car_model,
+                'mileage': user_car_detail.mileage,
+                'purchase_date': user_car_detail.purchase_date.strftime('%Y-%m-%d'),
+                'configuration': user_car_detail.configuration
+            },
+            'car_data': car_data
+        }
+        
+        return JsonResponse(result)
     except User.DoesNotExist:
         return JsonResponse({'success': False, 'message': '用户不存在'})
     except Exception as e:

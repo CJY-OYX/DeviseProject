@@ -5,7 +5,7 @@
       <dv-border-box-10 class="dv-10">
       <div class="timer-title">车辆购买时间</div>
       <dv-decoration-7 class="dv-7">
-        <span class="static-text">&nbsp;&nbsp;{{ carDetail.purchase_date || '----' }}&nbsp;&nbsp;</span>
+        <span class="static-text">&nbsp;&nbsp;{{ carDetail.purchaseDate || '----' }}&nbsp;&nbsp;</span>
       </dv-decoration-7>
       </dv-border-box-10>
     </div>
@@ -30,7 +30,7 @@ export default {
   },
   computed: {
     ownTimeText() {
-      const buy = new Date(this.carDetail?.purchase_date || Date.now());
+      const buy = new Date(this.carDetail?.purchaseDate || Date.now());
       const diff = Date.now() - buy;
       const totalDays = Math.floor(diff / 86400000);
       return `${totalDays}天`;

@@ -50,15 +50,16 @@ export default {
       mileage: 0,
       purchaseDate: '',
       configuration: '',
-      searchResults: [],
-      userId: this.$route.query.userId || null
+      searchResults: []
     }
   },
   mounted() {
-    // 获取车辆ID
-    this.carId = this.$route.query.carId || null
-    if (!this.carId || !this.userId) {
-      alert('参数不完整，请重新选择车辆');
+    // 从localStorage获取用户名
+    const username = localStorage.getItem('username');
+    
+    // 参数验证
+    if (!username) {
+      alert('用户未登录，请先登录');
       this.$router.push('/login');
       return;
     }
@@ -68,36 +69,56 @@ export default {
   },
   methods: {
     fetchCarDetail() {
-      // 使用entry-user-info接口获取车辆详情
-      const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || '{}');
-      const username = userInfo.username;
+      // 从localStorage获取用户名（登录信息存储在此处）
+      const username = localStorage.getItem('username');
+
+      // 参数验证
       if (!username) {
-        alert('未找到用户名，请重新登录');
+        alert('用户未登录，请先登录');
         this.$router.push('/login');
         return;
       }
-      axios.post('http://localhost:8000/myApp/entry-user-info/', {username: username})
+
+      // 发送请求到新的if-user-car-detail接口
+      axios.post('http://localhost:8000/myApp/if-user-car-detail/', {
+        username: username
+      })
       .then(response => {
         if (response.data.success) {
-          const carData = response.data.usercarinfo;
-          if (!carData) {
-            alert('未找到车辆信息');
-            return;
+          // 保存用户ID
+          this.userId = response.data.userid;
+          this.carId = response.data.user_car_detail.car_id;
+
+          // 从car_data字段获取车辆基本信息
+          const carData = response.data.car_data;
+          if (carData) {
+            this.carName = carData.carName || carData.car_name;
+            this.carModel = carData.carModel || carData.car_model;
           }
-          this.carName = carData.carName;
-          this.carModel = carData.carModel;
-          this.mileage = carData.mileage;
-          this.purchaseDate = carData.purchaseDate;
-          this.configuration = carData.configuration;
+
+          // 从user_car_detail字段获取用户车辆详情
+          const userCarData = response.data.user_car_detail;
+          if (userCarData) {
+            this.mileage = userCarData.mileage;
+            this.purchaseDate = userCarData.purchase_date || userCarData.purchaseDate;
+            this.configuration = userCarData.configuration;
+          }
+
+          if (!carData || !userCarData) {
+            alert('未找到完整的车辆信息');
+          }
         } else {
-          alert(response.data.message || '获取车辆详情失败');
+          alert(response.data.message || '获取车辆信息失败');
         }
       })
       .catch(error => {
-        console.error('获取车辆详情失败:', error);
-        alert('获取车辆详情失败，请重试');
+        console.error('获取车辆信息失败:', error);
+        alert('获取车辆信息失败，请重试');
       });
     },
+
+    // 移除不再需要的方法
+    
 
     searchCars() {
       if (this.carName.length < 1) {
@@ -138,7 +159,7 @@ export default {
       }
 
       // 发送更新请求到后端API
-      axios.post('http://localhost:8000/myApp/update-user-car-detail/', {
+      axios.post('http://localhost:8000/myApp/save-user-car-detail/', {
         carId: this.carId,
         userId: this.userId,
         carName: this.carName,

@@ -15,4 +15,5 @@ urlpatterns = [
     path("get-user-info/", views.get_user_info, name="get_user_info"),
     path("get-car-info/", views.get_car_info, name="get_car_info"),
     path("get-user-car-detail/", views.get_user_car_detail, name="get_user_car_detail"),
+    path("if-user-car-detail/", views.if_user_car_detail, name="if_user_car_detail"),
 ]
