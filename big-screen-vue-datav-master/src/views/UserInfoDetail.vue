@@ -29,8 +29,8 @@
             <div class="react-left ml-4 react-l-s" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
               <span class="text" @click="goToHome">首页</span>
             </div>
-            <div class="react-left ml-3">
-              <span class="text">编辑</span>
+            <div class="react-left ml-3" :style="{ backgroundColor: isEdit ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }
+              "><span class="text" @click="goToEdit">编辑</span>
             </div>
           </div>
           <div class="d-flex aside-width">
@@ -102,7 +102,8 @@ export default {
       userCarDetail: null,
       username: localStorage.getItem('username') || '',
       isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
-      isHomePage: this.$route.path === '/' 
+      isHomePage: this.$route.path === '/' ,
+      isEdit: this.$route.path === '/user-car-detail-edit'
     }
   },
   mounted() {
@@ -129,6 +130,39 @@ export default {
     window.removeEventListener('storage', this.handleStorageChange);
   },
   methods: {
+    goToEdit() {
+        // 根据用户名获取用户和车辆信息
+        axios.post('http://localhost:8000/myApp/entry-user-info/', {username: this.username})
+          .then(res => {
+            if (res.data.success) {
+              const userId = res.data.userinfo?.id;
+              const carId = res.data.usercarinfo?.id;
+              
+
+              if (!userId || !carId) {
+                alert('未找到用户或车辆信息，请先完善用户详情');
+                this.$router.push('/user-detail');
+                return;
+              }
+
+              // 存储用户数据
+              sessionStorage.setItem('userData', JSON.stringify(res.data));
+              sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
+              sessionStorage.setItem('userCarInfo', JSON.stringify(res.data.usercarinfo));
+
+              // 跳转到编辑页面（不携带参数在URL中）
+              this.$router.push({
+                path: '/user-car-detail-edit'
+              });
+            } else {
+              alert(res.data.message || '获取用户信息失败');
+            }
+          })
+          .catch(error => {
+            console.error('获取用户信息错误:', error);
+            alert('网络请求错误: ' + error.message);
+          });
+      },
     handleStorageChange(event) {
       if (event.key === 'username') {
         this.username = event.newValue || '';

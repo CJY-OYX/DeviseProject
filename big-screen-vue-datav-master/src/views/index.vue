@@ -30,7 +30,7 @@
             <div class="react-left ml-4 react-l-s" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
               <span class="text" @click="goToHome">首页</span>
             </div>
-            <div class="react-left ml-3" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }
+            <div class="react-left ml-3" :style="{ backgroundColor: isEdit ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }
               "><span class="text" @click="goToEdit">编辑</span>
             </div>
           </div>
@@ -119,7 +119,8 @@ export default {
       weekday: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
       decorationColor: ['#568aea', '#000000'],
       isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
-      isHomePage: this.$route.path === '/'
+      isHomePage: this.$route.path === '/',
+      isEdit: this.$route.path === '/user-car-detail-edit'
     }
   },
   components: {

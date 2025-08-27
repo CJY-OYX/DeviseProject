@@ -1,36 +1,85 @@
 <template>
-  <div class="user-detail-container">
-    <dv-border-box-1 class="user-detail-border-box">
-      <div class="user-detail-form">
-        <h2 class="form-title">编辑用户车辆详情</h2>
-        <div class="form-group">
-          <label for="carName" style="color: white">车辆名字</label>
-          <div class="search-input-container">
-            <input type="text" id="carName" v-model="carName" @input="searchCars" placeholder="请输入车辆名字">
-            <div class="search-results" v-if="searchResults.length > 0">
-              <div v-for="car in searchResults" :key="car.id" @click="selectCar(car)">{{ car.carName }} ({{ car.carModel }})</div>
+  <div id="userCarDetailEdit" ref="appRef">
+    <div class="bg" style="background: url('/VCG41N1312873566.jpg') center/cover no-repeat;position: relative;">
+      <dv-loading v-if="loading">Loading...</dv-loading>
+      <div v-else class="host-body">
+        <div class="d-flex jc-center">
+          <dv-decoration-10 class="dv-dec-10" />
+          <div class="d-flex jc-center">
+            <dv-decoration-8 class="dv-dec-8" :color="decorationColor" />
+            <div class="title">
+              <span class="title-text">编辑用户车辆详情</span>
+              <dv-decoration-5
+                class="dv-dec-6"
+                :reverse="true"
+              />
+            </div>
+            <dv-decoration-8
+              class="dv-dec-8"
+              :reverse="true"
+              :color="decorationColor"
+            />
+          </div>
+          <dv-decoration-10 class="dv-dec-10-s" />
+        </div>
+
+        <!-- 第二行 -->
+        <div class="d-flex jc-between px-2">
+          <div class="d-flex aside-width">
+            <div class="react-left ml-4 react-l-s" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
+              <span class="text" @click="goToHome">首页</span>
+            </div>
+            <div class="react-left ml-3" :style="{ backgroundColor: !isHomePage ? '#9c27b0' : '#2196f3' }">
+              <span class="text" @click="goToEdit">编辑</span>
+            </div>
+          </div>
+          <div class="d-flex aside-width">
+            <div class="react-right bg-color-green mr-3" v-if="isLoggedIn">
+              <span class="text fw-b" @click="entryInfo">{{ username }}</span>
+            </div>
+            <div class="react-right mr-4 react-l-s">
+              <span class="react-after"></span>
+              <span class="text">{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span>
             </div>
           </div>
         </div>
-        <div class="form-group">
-          <label for="carModel" style="color: white">车辆型号</label>
-          <input type="text" id="carModel" v-model="carModel" placeholder="请输入车辆型号">
+
+        <div class="body-box">
+          <div class="content-box">
+            <dv-border-box-1 class="user-detail-border-box">
+              <div class="user-detail-form">
+                <div class="form-group">
+                  <label for="carName" style="color: white">车辆名字</label>
+                  <div class="search-input-container">
+                    <input type="text" id="carName" v-model="carName" @input="searchCars" placeholder="请输入车辆名字">
+                    <div class="search-results" v-if="searchResults.length > 0">
+                      <div v-for="car in searchResults" :key="car.id" @click="selectCar(car)">{{ car.carName }} ({{ car.carModel }})</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="carModel" style="color: white">车辆型号</label>
+                  <input type="text" id="carModel" v-model="carModel" placeholder="请输入车辆型号">
+                </div>
+                <div class="form-group">
+                  <label for="mileage" style="color: white">车辆公里数</label>
+                  <input type="number" id="mileage" v-model="mileage" placeholder="请输入车辆公里数">
+                </div>
+                <div class="form-group">
+                  <label for="purchaseDate" style="color: white">车辆购买时间</label>
+                  <input type="date" id="purchaseDate" v-model="purchaseDate">
+                </div>
+                <div class="form-group">
+                  <label for="configuration" style="color: white">车辆配置</label>
+                  <textarea id="configuration" v-model="configuration" placeholder="请输入车辆配置"></textarea>
+                </div>
+                <button class="submit-btn" @click="submitForm">更新</button>
+              </div>
+            </dv-border-box-1>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="mileage" style="color: white">车辆公里数</label>
-          <input type="number" id="mileage" v-model="mileage" placeholder="请输入车辆公里数">
-        </div>
-        <div class="form-group">
-          <label for="purchaseDate" style="color: white">车辆购买时间</label>
-          <input type="date" id="purchaseDate" v-model="purchaseDate">
-        </div>
-        <div class="form-group">
-          <label for="configuration" style="color: white">车辆配置</label>
-          <textarea id="configuration" v-model="configuration" placeholder="请输入车辆配置"></textarea>
-        </div>
-        <button class="submit-btn" @click="submitForm">更新</button>
       </div>
-    </dv-border-box-1>
+    </div>
   </div>
 </template>
 
@@ -38,12 +87,25 @@
 import Vue from 'vue'
 import DataV from '@jiaminghi/data-view'
 import axios from 'axios'
+import drawMixin from "../utils/drawMixin"
+import { formatTime } from '../utils/index.js'
 
 Vue.use(DataV)
 
 export default {
+  mixins: [ drawMixin ],
   data() {
     return {
+      timing: null,
+      loading: true,
+      dateDay: null,
+      dateYear: null,
+      dateWeek: null,
+      weekday: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+      decorationColor: ['#568aea', '#000000'],
+      isLoggedIn: true,
+      username: localStorage.getItem('username') || '',
+      isHomePage: false,
       carId: null,
       carName: '',
       carModel: '',
@@ -55,19 +117,42 @@ export default {
   },
   mounted() {
     // 从localStorage获取用户名
-    const username = localStorage.getItem('username');
+    this.username = localStorage.getItem('username') || '';
     
     // 参数验证
-    if (!username) {
+    if (!this.username) {
       alert('用户未登录，请先登录');
       this.$router.push('/login');
       return;
     }
+    
+    // 设置时间
+    this.updateTime();
+    this.timing = setInterval(() => {
+      this.updateTime();
+    }, 1000 * 60);
 
     // 获取车辆详情
     this.fetchCarDetail();
   },
   methods: {
+    updateTime() {
+      const time = formatTime();
+      this.dateYear = time.year;
+      this.dateWeek = time.week;
+      this.dateDay = time.day;
+    },
+    
+    goToHome() {
+    this.$router.push('/');
+    },
+    goToEdit() {
+    // 已经在编辑页，什么都不做
+    },
+    entryInfo() {
+    this.$router.push({ name: 'user-detail' });
+    },
+    
     fetchCarDetail() {
       // 从localStorage获取用户名（登录信息存储在此处）
       const username = localStorage.getItem('username');
@@ -114,7 +199,10 @@ export default {
       .catch(error => {
         console.error('获取车辆信息失败:', error);
         alert('获取车辆信息失败，请重试');
-      });
+      })
+      .finally(() => {
+        this.loading = false;
+      })
     },
 
     // 移除不再需要的方法
@@ -187,94 +275,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.user-detail-container {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #0f172a;
-}
-
-.user-detail-border-box {
-  width: 500px;
-  padding: 10px;
-}
-
-.user-detail-form {
-  width: 100%;
-  padding: 30px;
-}
-
-.form-title {
-  color: white;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-input,
-textarea {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-}
-
-textarea {
-  height: 100px;
-  resize: vertical;
-}
-
-.submit-btn {
-  width: 100%;
-  padding: 30px;
-  background-color: #165dff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.submit-btn:hover {
-  background-color: #0e4cca;
-}
-
-.search-input-container {
-  position: relative;
-}
-
-.search-results {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  background-color: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 0 0 4px 4px;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 10;
-}
-
-.search-results div {
-  padding: 8px;
-  cursor: pointer;
-  color: white;
-}
-
-.search-results div:hover {
-  background-color: #334155;
-}
+@import '../assets/scss/user-car-detail-edit.scss';
 </style>

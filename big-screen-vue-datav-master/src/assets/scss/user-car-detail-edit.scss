@@ -1,0 +1,275 @@
+// 反应按钮基础样式
+.react-button {
+  font-size: 18px;
+  width: 300px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  position: relative;
+  background-color: #0f1325;
+
+  .text {
+    display: inline-block;
+    color: white;
+    @extend .text-hover-effect;
+  }
+}
+
+// 文本悬停效果公共类
+.text-hover-effect {
+  &:hover {
+    text-decoration: underline;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  }
+}
+
+#userCarDetailEdit {
+  color: #d3d6dd;
+  width: 1920px;
+  height: 1080px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: left top;
+  overflow: hidden;
+
+  .bg {
+    width: 100%;
+    height: 100%;
+    padding: 16px 16px 0 16px;
+    background-size: cover;
+    background-position: center center;
+  }
+
+  .host-body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    /* 顶部装饰线 */
+    .dv-dec-10,
+    .dv-dec-10-s {
+      width: 33.3%;
+      height: 5px;
+    }
+    .dv-dec-10-s {
+      transform: rotateY(180deg);
+    }
+    .dv-dec-8 {
+      width: 200px;
+      height: 50px;
+    }
+
+    /* 标题 */
+    .title {
+      position: relative;
+      width: 500px;
+      text-align: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+
+      .title-text {
+        font-size: 24px;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translate(-50%);
+      }
+
+      .dv-dec-6 {
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        width: 250px;
+        height: 8px;
+        transform: translate(-50%);
+      }
+    }
+
+    /* 第二行导航 */
+    .aside-width {
+      width: 40%;
+    }
+
+    /* 平行四边形按钮 */
+    .react-left,
+    .react-right {
+      font-size: 18px;
+      height: 50px;
+      line-height: 50px;
+      text-align: center;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .react-left {
+      transform: skewX(45deg);
+      background-color: #0f1325;
+
+      &.react-l-s {
+        width: 500px;
+        text-align: left;
+      }
+
+      .text {
+        display: inline-block;
+        transform: skewX(-45deg);
+        color: #fff;
+        &:hover {
+          text-decoration: underline;
+          text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+      }
+    }
+
+    .react-right {
+      transform: skewX(-45deg);
+      background-color: #0f1325;
+
+      &.react-l-s {
+        width: 500px;
+        text-align: right;
+      }
+
+      .react-after {
+        position: absolute;
+        right: -25px;
+        top: 0;
+        height: 50px;
+        width: 50px;
+        background-color: #0f1325;
+        transform: skewX(45deg);
+      }
+
+      .text {
+        display: inline-block;
+        transform: skewX(45deg);
+        color: #fff;
+        &:hover {
+          text-decoration: underline;
+          text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+      }
+    }
+
+    /* 用户名 / 登录按钮配色 */
+    .bg-color-green {
+      background-color: #2ecc71;
+      color: #fff;
+      padding: 0 15px;
+      border-radius: 4px;
+    }
+    .bg-color-blue {
+      background-color: #2196f3;
+      color: #fff;
+      padding: 0 15px;
+      border-radius: 4px;
+    }
+
+    /* ========= 2. 表单区域（宽度高度自适应） ========= */
+    .body-box {
+      flex: 1;                   /* 占剩余全部高度 */
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px 32px;
+      box-sizing: border-box;
+    }
+
+    .content-box {
+      width: 100%;
+      height: 100%;
+      font-size: 30px;
+      padding: 15px;
+    }
+
+    .user-detail-border-box {
+      width: 100%;
+      max-width: 900px;          /* 按需再调更大 */
+      margin: 0 auto;
+    }
+  }
+}
+
+/* ========= 3. 表单内部样式（保持原样） ========= */
+.user-detail-form {
+  width: 100%;
+  padding: 30px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 30px;
+  margin-bottom: 8px;
+  color: white;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  height: 50px;
+  font-size: 24px;
+  line-height: 1.2;
+  padding: 8px 12px;
+  box-sizing: border-box;
+}
+
+textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 30px;
+  background-color: #165dff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 30px;
+  padding: 20px;
+
+  &:hover {
+    background-color: #0e4cca;
+  }
+}
+
+.search-input-container {
+  position: relative;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+
+  div {
+    padding: 8px;
+    cursor: pointer;
+    color: white;
+
+    &:hover {
+      background-color: #334155;
+    }
+  }
+}

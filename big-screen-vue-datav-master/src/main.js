@@ -3,6 +3,22 @@ import App from './App.vue';
 import router from './router';
 import store from './store';
 import dataV from '@jiaminghi/data-view';
+// DataV MutationObserver 错误修复补丁
+import patchDataV from './utils/dataViewPatch';
+// 应用补丁
+patchDataV();
+
+// // 仅在开发模式下运行补丁测试 - 已禁用
+// if (process.env.NODE_ENV === 'development') {
+//   import('./utils/testDataViewPatch').then(({ default: testDataViewPatch }) => {
+//     // 延迟执行测试，确保应用初始化完成
+//     setTimeout(() => {
+//       testDataViewPatch();
+//     }, 1000);
+//   }).catch(error => {
+//     console.error('加载 DataV 补丁测试失败:', error);
+//   });
+// }
 // 引入全局css
 import './assets/scss/style.scss';
 // 按需引入vue-awesome图标
@@ -23,6 +39,10 @@ import echarts from 'echarts'
 Vue.prototype.$echarts = echarts
 Vue.config.productionTip = false;
 Vue.prototype.$http = $http
+
+// 引入自定义弹窗函数并全局替换原生alert
+import { showModal } from './utils/index.js';
+window.alert = showModal;
 // 全局注册
 Vue.component('icon', Icon);
 Vue.use(dataV);

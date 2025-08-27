@@ -3,31 +3,7 @@ import VueRouter from 'vue-router'
 
 Vue.use(VueRouter)
 
-const routes = [{
-  path: '/',
-  name: 'index',
-  component: () => import('../views/index.vue')
-}, {
-  path: '/login',
-  name: 'login',
-  component: () => import('../views/Login.vue')
-}, {
-  path: '/register',
-  name: 'register',
-  component: () => import('../views/Register.vue')
-}, {
-  path: '/user-detail-form',
-  name: 'userDetailForm',
-  component: () => import('../views/UserDetailForm.vue')
-},{  path: '/user-detail',
-  name: 'user-detail',
-  component: () => import('../views/UserInfoDetail.vue')
-},
-{
-  path: '/user-car-detail-edit',
-  name: 'userCarDetailEdit',
-  component: () => import('../views/UserCarDetailEdit.vue')
-}]
+const routes = [{  path: '/',  name: 'index',  component: () => import('../views/index.vue')}, {  path: '/login',  name: 'login',  component: () => import('../views/Login.vue')}, {  path: '/register',  name: 'register',  component: () => import('../views/Register.vue')}, {  path: '/user-detail-form',  name: 'userDetailForm',  component: () => import('../views/UserDetailForm.vue')},{  path: '/user-detail',  name: 'user-detail',  component: () => import('../views/UserInfoDetail.vue')}, {  path: '/user-car-detail-edit',  name: 'userCarDetailEdit',  component: () => import('../views/UserCarDetailEdit.vue')}, {  path: '/admin',  name: 'adminPanel',  component: () => import('../views/AdminPanel.vue'),  meta: { requiresAuth: true, requiresAdmin: true }}]
 
 const router = new VueRouter({
   routes
@@ -45,7 +21,20 @@ router.beforeEach((to, from, next) => {
         query: { redirect: to.fullPath }
       })
     } else {
-      next()
+      // 检查是否需要管理员权限
+      if (to.matched.some(record => record.meta.requiresAdmin)) {
+        const userRole = localStorage.getItem('userRole');
+        if (userRole !== 'admin') {
+          alert('您没有管理员权限访问此页面');
+          next({
+            path: '/',
+          })
+        } else {
+          next()
+        }
+      } else {
+        next()
+      }
     }
   } else {
     next() // 确保一定要调用 next()

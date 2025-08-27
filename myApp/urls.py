@@ -16,4 +16,14 @@ urlpatterns = [
     path("get-car-info/", views.get_car_info, name="get_car_info"),
     path("get-user-car-detail/", views.get_user_car_detail, name="get_user_car_detail"),
     path("if-user-car-detail/", views.if_user_car_detail, name="if_user_car_detail"),
+    # 管理员面板API
+    path("getUsersList/", views.getUsersList, name="getUsersList"),
+    path("getCarInfoList/", views.getCarInfoList, name="getCarInfoList"),
+    path("getUserStats/", views.getUserStats, name="getUserStats"),
+    path("getUpdateLogs/", views.getUpdateLogs, name="getUpdateLogs"),
+    path("searchUser/", views.searchUser, name="searchUser"),
+    path("updateUser/", views.updateUser, name="updateUser"),
+    path("deleteUser/", views.deleteUser, name="deleteUser"),
+    path("getUserCarDetails/", views.getUserCarDetails, name="getUserCarDetails"),
+    path("searchCarInfo/", views.searchCarInfo, name="searchCarInfo"),
 ]

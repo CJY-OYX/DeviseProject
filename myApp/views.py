@@ -14,6 +14,7 @@ from .utils import getCenterRightData
 from .utils import getCenterChangeData
 from .utils import getBottomRightData
 import re
+from django.db.models import Count, Avg, Q
 
 # Create your views here.
 def center(request):
@@ -442,6 +443,303 @@ def if_user_car_detail(request):
         }
         
         return JsonResponse(result)
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'message': '用户不存在'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+# 管理员面板API
+def getUsersList(request):
+    if request.method == 'GET':
+        try:
+            users = User.objects.all()
+            user_list = []
+            for user in users:
+                user_list.append({
+                    'id': user.id,
+                    'username': user.username,
+                    'createTime': user.createTime.strftime('%Y-%m-%d %H:%M:%S')
+                })
+            return JsonResponse({'success': True, 'users': user_list})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+def getCarInfoList(request):
+    if request.method == 'GET':
+        try:
+            cars = carInfo.objects.all()
+            car_list = []
+            for car in cars:
+                # 处理价格数据
+                price_range = []
+                if car.price:
+                    try:
+                        price_range = [float(x) for x in car.price.strip('[]').split(',')]
+                    except Exception:
+                        price_range = [0, 0]
+                
+                car_list.append({
+                    'id': car.id,
+                    'brand': car.brand,
+                    'carName': car.carName,
+                    'carImg': car.carImg,
+                    'saleVolume': car.saleVolume,
+                    'price': car.price,
+                    'priceRange': price_range,
+                    'manufacturer': car.manufacturer,
+                    'rank': car.rank,
+                    'carModel': car.carModel,
+                    'energyType': car.energyType,
+                    'marketTime': car.marketTime,
+                    'insure': car.insure
+                })
+            return JsonResponse({'success': True, 'cars': car_list})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+def searchCarInfo(request):
+    if request.method == 'GET':
+        try:
+            carName = request.GET.get('carName', '')
+            if not carName:
+                return JsonResponse({'success': False, 'message': '请输入搜索关键词'})
+            
+            # 在carInfo表中搜索类似匹配的车辆，支持品牌、车型和车名的搜索
+            cars = carInfo.objects.filter(
+                Q(brand__icontains=carName) | 
+                Q(carName__icontains=carName) | 
+                Q(carModel__icontains=carName)
+            )
+            
+            car_list = []
+            for car in cars:
+                # 处理价格数据
+                price_range = []
+                if car.price:
+                    try:
+                        price_range = [float(x) for x in car.price.strip('[]').split(',')]
+                    except Exception:
+                        price_range = [0, 0]
+                
+                car_list.append({
+                    'id': car.id,
+                    'brand': car.brand,
+                    'carName': car.carName,
+                    'carImg': car.carImg,
+                    'saleVolume': car.saleVolume,
+                    'price': car.price,
+                    'priceRange': price_range,
+                    'manufacturer': car.manufacturer,
+                    'rank': car.rank,
+                    'carModel': car.carModel,
+                    'energyType': car.energyType,
+                    'marketTime': car.marketTime,
+                    'insure': car.insure
+                })
+            
+            return JsonResponse({'success': True, 'carInfoList': car_list})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+def getUserStats(request):
+    if request.method == 'GET':
+        try:
+            # 计算用户总数
+            total_users = User.objects.count()
+            
+            # 计算拥有车辆的用户数
+            users_with_cars = UserCarDetail.objects.values('user').distinct().count()
+            
+            # 计算汽车总数
+            total_cars = carInfo.objects.count()
+            
+            # 计算平均每用户车辆数
+            avg_cars_per_user = 0
+            if total_users > 0:
+                avg_cars_per_user = round(users_with_cars / total_users, 2)
+            
+            # 获取能源类型分布
+            energy_stats = carInfo.objects.values('energyType').annotate(count=Count('id'))
+            energy_distribution = {}
+            for item in energy_stats:
+                energy_distribution[item['energyType']] = item['count']
+            
+            # 获取品牌分布
+            brand_stats = carInfo.objects.values('brand').annotate(count=Count('id'))
+            brand_distribution = {}
+            for item in brand_stats:
+                brand_distribution[item['brand']] = item['count']
+            
+            return JsonResponse({
+                'success': True,
+                'stats': {
+                    'totalUsers': total_users,
+                    'usersWithCars': users_with_cars,
+                    'totalCars': total_cars,
+                    'avgCarsPerUser': avg_cars_per_user,
+                    'energyDistribution': energy_distribution,
+                    'brandDistribution': brand_distribution
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+def getUpdateLogs(request):
+    if request.method == 'GET':
+        try:
+            # 模拟更新日志数据
+            logs = [
+                {
+                    'id': 1,
+                    'timestamp': '2023-08-26 10:30:00',
+                    'operation': '系统更新',
+                    'description': '优化了数据加载性能',
+                    'operator': '系统管理员'
+                },
+                {
+                    'id': 2,
+                    'timestamp': '2023-08-25 15:45:00',
+                    'operation': '数据更新',
+                    'description': '更新了车辆信息数据',
+                    'operator': '数据管理员'
+                },
+                {
+                    'id': 3,
+                    'timestamp': '2023-08-24 09:15:00',
+                    'operation': '用户添加',
+                    'description': '添加了3个新用户',
+                    'operator': '系统管理员'
+                }
+            ]
+            return JsonResponse({'success': True, 'logs': logs})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def searchUser(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            keyword = data.get('keyword', '')
+            
+            if not keyword:
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(username__icontains=keyword)
+            
+            user_list = []
+            for user in users:
+                user_list.append({
+                    'id': user.id,
+                    'username': user.username,
+                    'createTime': user.createTime.strftime('%Y-%m-%d %H:%M:%S')
+                })
+            
+            return JsonResponse({'success': True, 'users': user_list})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def updateUser(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_id = data.get('id')
+            username = data.get('username')
+            
+            if not user_id or not username:
+                return JsonResponse({'success': False, 'message': '缺少必要参数'})
+            
+            user = User.objects.get(id=user_id)
+            user.username = username
+            user.save()
+            
+            return JsonResponse({'success': True, 'message': '更新成功'})
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'message': '用户不存在'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def deleteUser(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_id = data.get('id')
+            
+            if not user_id:
+                return JsonResponse({'success': False, 'message': '缺少用户ID'})
+            
+            user = User.objects.get(id=user_id)
+            user.delete()
+            
+            return JsonResponse({'success': True, 'message': '删除成功'})
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'message': '用户不存在'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def getUserCarDetails(request):
+    try:
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            user_id = data.get('userId')
+            
+            if not user_id:
+                return JsonResponse({'success': False, 'message': '缺少用户ID'})
+            
+            user = User.objects.get(id=user_id)
+            user_car_details = UserCarDetail.objects.filter(user=user)
+        elif request.method == 'GET':
+            # GET请求返回所有用户的汽车详情
+            user_car_details = UserCarDetail.objects.all()
+        else:
+            return JsonResponse({'success': False, 'message': '不支持的请求方法'})
+    
+        details_list = []
+        for detail in user_car_details:
+            car_data = None
+            if detail.car:
+                car = detail.car
+                price_range = []
+                if car.price:
+                    try:
+                        price_range = [float(x) for x in car.price.strip('[]').split(',')]
+                    except Exception:
+                        price_range = [0, 0]
+                
+                car_data = {
+                    'id': car.id,
+                    'brand': car.brand,
+                    'carName': car.carName,
+                    'priceRange': price_range
+                }
+            
+            # 添加用户名信息
+            user_name = detail.user.username if detail.user else '未知用户'
+            
+            details_list.append({
+                'id': detail.id,
+                'user_name': user_name,  # 添加用户名
+                'car_name': detail.car_name,
+                'car_model': detail.car_model,
+                'mileage': detail.mileage,
+                'purchase_date': detail.purchase_date.strftime('%Y-%m-%d'),
+                'configuration': detail.configuration,
+                'car_data': car_data
+            })
+        
+        return JsonResponse({'success': True, 'details': details_list})
     except User.DoesNotExist:
         return JsonResponse({'success': False, 'message': '用户不存在'})
     except Exception as e:
