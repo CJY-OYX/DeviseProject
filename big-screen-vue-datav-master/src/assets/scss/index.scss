@@ -8,6 +8,28 @@
   display: inline-block;
 }
 
+// 登出按钮样式
+.logout-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 8px;
+  transition: background-color 0.3s;
+  transform: skewX(45deg); // 抵消父容器的倾斜效果
+}
+
+.logout-btn:hover {
+  background-color: #c0392b;
+}
+
+.ml-2 {
+  margin-left: 8px !important;
+}
+
 #index {
   color: #d3d6dd;
   width: 1920px;

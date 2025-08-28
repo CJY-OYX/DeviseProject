@@ -37,6 +37,7 @@
           <div class="d-flex aside-width">
             <div class="react-right bg-color-green mr-3" v-if="isLoggedIn">
               <span class="text fw-b" @click="entryInfo">{{ username }}</span>
+              <button class="logout-btn ml-2" @click.stop="logout">登出</button>
             </div>
             <div class="react-right bg-color-blue mr-3" v-else>
               <router-link to="/login" class="text fw-b">登录</router-link>
@@ -120,8 +121,9 @@ export default {
       decorationColor: ['#568aea', '#000000'],
       isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
       isHomePage: this.$route.path === '/',
-      isEdit: this.$route.path === '/user-car-detail-edit'
-    }
+      isEdit: this.$route.path === '/user-car-detail-edit',
+      username: localStorage.getItem('username') || ''
+    };
   },
   components: {
     centerLeft1,
@@ -133,10 +135,8 @@ export default {
     bottomRight
   },
   mounted() {
-    this.timeFn()
-    this.cancelLoading()
-    // 获取用户名
-    this.username = localStorage.getItem('username') || '';
+    this.timeFn();
+    this.cancelLoading();
     // 初始化首页状态
     this.isHomePage = this.$route.path === '/';
     // 监听登录状态变化
@@ -147,7 +147,7 @@ export default {
     });
   },
   beforeDestroy() {
-    clearInterval(this.timing)
+    clearInterval(this.timing);
     window.removeEventListener('storage', this.handleStorageChange);
   },
   methods: {
@@ -161,90 +161,97 @@ export default {
     },
     timeFn() {
       this.timing = setInterval(() => {
-        this.dateDay = formatTime(new Date(), 'HH: mm: ss')
-        this.dateYear = formatTime(new Date(), 'yyyy-MM-dd')
-        this.dateWeek = this.weekday[new Date().getDay()]
-      }, 1000)
+        this.dateDay = formatTime(new Date(), 'HH: mm: ss');
+        this.dateYear = formatTime(new Date(), 'yyyy-MM-dd');
+        this.dateWeek = this.weekday[new Date().getDay()];
+      }, 1000);
     },
     cancelLoading() {
       setTimeout(() => {
-        this.loading = false
-      }, 500)
+        this.loading = false;
+      }, 500);
     },
     entryInfo(){
-    axios.post('http://localhost:8000/myApp/entry-user-info/', {username:this.username})
+      axios.post('http://localhost:8000/myApp/entry-user-info/', {username:this.username})
         .then(res => {
           console.log('Response data:', res.data);
           console.log('usercarinfo:', res.usercarinfo);
-
 
           if (res.data.success){
             sessionStorage.setItem('userData', JSON.stringify(res.data));
             sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
             sessionStorage.setItem('userCarInfo', JSON.stringify(res.usercarinfo));
-            this.$router.push({ path: '/user-detail' })
+            this.$router.push({ path: '/user-detail' });
           }
           else{
-            alert(res.data.message || '请求失败')
+            alert(res.data.message || '请求失败');
           }
         })
         .catch(error => {
           console.error('Request error:', error);
           alert('网络请求错误: ' + error.message);
-        })
-  },
-  goToHome() {
-        this.$router.push('/');
-      },
-      goToEdit() {
-        // 检查是否已登录
-        if (!this.isLoggedIn) {
-          alert('请先登录');
-          this.$router.push('/login');
-          return;
-        }
+        });
+    },
+    goToHome() {
+      this.$router.push('/');
+    },
+    goToEdit() {
+      // 检查是否已登录
+      if (!this.isLoggedIn) {
+        alert('请先登录');
+        this.$router.push('/login');
+        return;
+      }
 
-        // 检查用户名是否存在
-        if (!this.username) {
-          alert('未找到用户名，请先登录');
-          this.$router.push('/login');
-          return;
-        }
+      // 检查用户名是否存在
+      if (!this.username) {
+        alert('未找到用户名，请先登录');
+        this.$router.push('/login');
+        return;
+      }
 
-        // 根据用户名获取用户和车辆信息
-        axios.post('http://localhost:8000/myApp/entry-user-info/', {username: this.username})
-          .then(res => {
-            if (res.data.success) {
-              const userId = res.data.userinfo?.id;
-              const carId = res.data.usercarinfo?.id;
-              
+      // 根据用户名获取用户和车辆信息
+      axios.post('http://localhost:8000/myApp/entry-user-info/', {username: this.username})
+        .then(res => {
+          if (res.data.success) {
+            const userId = res.data.userinfo?.id;
+            const carId = res.data.usercarinfo?.id;
 
-              if (!userId || !carId) {
-                alert('未找到用户或车辆信息，请先完善用户详情');
-                this.$router.push('/user-detail');
-                return;
-              }
-
-              // 存储用户数据
-              sessionStorage.setItem('userData', JSON.stringify(res.data));
-              sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
-              sessionStorage.setItem('userCarInfo', JSON.stringify(res.data.usercarinfo));
-
-              // 跳转到编辑页面（不携带参数在URL中）
-              this.$router.push({
-                path: '/user-car-detail-edit'
-              });
-            } else {
-              alert(res.data.message || '获取用户信息失败');
+            if (!userId || !carId) {
+              alert('未找到用户或车辆信息，请先完善用户详情');
+              this.$router.push('/user-detail');
+              return;
             }
-          })
-          .catch(error => {
-            console.error('获取用户信息错误:', error);
-            alert('网络请求错误: ' + error.message);
-          });
-      },
-  },
-}
+
+            // 存储用户数据
+            sessionStorage.setItem('userData', JSON.stringify(res.data));
+            sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
+            sessionStorage.setItem('userCarInfo', JSON.stringify(res.data.usercarinfo));
+
+            // 跳转到编辑页面（不携带参数在URL中）
+            this.$router.push({
+              path: '/user-car-detail-edit'
+            });
+          } else {
+            alert(res.data.message || '获取用户信息失败');
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息错误:', error);
+          alert('网络请求错误: ' + error.message);
+        });
+    },
+    logout() {
+      // 清除本地存储中的登录状态
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('username');
+      localStorage.removeItem('userRole');
+      
+      // 跳转到登录页面
+      this.$router.push('/login');
+    }
+  }
+};
 </script>
 
 <style lang="scss" scoped>
