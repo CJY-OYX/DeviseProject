@@ -1,5 +1,16 @@
 import service from './index.js'
 
+// 获取管理员面板综合数据 - 一次性获取所有需要的数据
+export const getAdminDashboardData = async () => {
+  try {
+    const response = await service.get('/myApp/getAdminDashboardData/')
+    return response.data
+  } catch (error) {
+    console.error('获取管理员面板数据失败:', error)
+    throw error
+  }
+}
+
 // 获取所有用户列表
 export const getUsersList = async () => {
   try {
@@ -73,6 +84,17 @@ export const getUserStats = async () => {
     return response.data
   } catch (error) {
     console.error('获取用户统计信息失败:', error)
+    throw error
+  }
+}
+
+// 获取汽车数据统计
+export const getCarDataStats = async () => {
+  try {
+    const response = await service.get('/myApp/getCarDataStats/')
+    return response.data
+  } catch (error) {
+    console.error('获取汽车数据统计失败:', error)
     throw error
   }
 }

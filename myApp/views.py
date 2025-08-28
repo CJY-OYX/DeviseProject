@@ -449,6 +449,81 @@ def if_user_car_detail(request):
         return JsonResponse({'success': False, 'message': str(e)})
 
 
+# 管理员面板综合API - 一次性返回所有需要的数据
+def getAdminDashboardData(request):
+    if request.method == 'GET':
+        try:
+            # 获取用户列表（已格式化）
+            users = User.objects.all()
+            user_list = []
+            for user in users:
+                user_list.append({
+                    'id': user.id,
+                    'username': user.username,
+                    'role': '管理员' if user.id == 1 else '普通用户',
+                    'createdAt': user.createTime.strftime('%Y-%m-%d') if user.createTime else ''
+                })
+            
+            # 获取用户统计数据
+            total_users = User.objects.count()
+            users_with_cars = UserCarDetail.objects.values('user').distinct().count()
+            today = datetime.date.today()
+            today_new_users = User.objects.filter(createTime__date=today).count()
+            
+            # 获取汽车信息列表
+            cars = carInfo.objects.all()
+            car_list = []
+            for car in cars:
+                # 处理价格数据
+                price_range = []
+                if car.price:
+                    try:
+                        price_range = [float(x) for x in car.price.strip('[]').split(',')]
+                    except Exception:
+                        price_range = [0, 0]
+                
+                car_list.append({
+                    'id': car.id,
+                    'brand': car.brand,
+                    'carName': car.carName,
+                    'energyType': car.energyType,
+                    'price': car.price,
+                    'priceRange': price_range,
+                    'marketTime': car.marketTime
+                })
+            
+            # 获取用户汽车详情
+            user_car_details = UserCarDetail.objects.all()
+            details_list = []
+            for detail in user_car_details:
+                # 添加用户名信息
+                user_name = detail.user.username if detail.user else '未知用户'
+                
+                details_list.append({
+                    'username': user_name,
+                    'carName': detail.car_name or '-',
+                    'model': detail.car_model or '-',
+                    'purchaseDate': detail.purchase_date.strftime('%Y-%m-%d') if detail.purchase_date else '-'
+                })
+            
+            # 整合所有数据并返回
+            return JsonResponse({
+                'success': True,
+                'users': user_list,
+                'userStats': {
+                    'totalUsers': total_users,
+                    'usersWithCars': users_with_cars,
+                    'todayNewUsers': today_new_users,
+                    'activeUsers': users_with_cars
+                },
+                'carInfoList': car_list,
+                'userCarDetails': details_list,
+                'totalData': len(car_list),
+                'dataTypes': carInfo.objects.values('energyType').distinct().count()
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
 # 管理员面板API
 def getUsersList(request):
     if request.method == 'GET':
@@ -459,7 +534,8 @@ def getUsersList(request):
                 user_list.append({
                     'id': user.id,
                     'username': user.username,
-                    'createTime': user.createTime.strftime('%Y-%m-%d %H:%M:%S')
+                    'role': '管理员' if user.id == 1 else '普通用户',  # 直接在后端判断用户角色
+                    'createdAt': user.createTime.strftime('%Y-%m-%d') if user.createTime else ''  # 日期格式化移至后端
                 })
             return JsonResponse({'success': True, 'users': user_list})
         except Exception as e:
@@ -574,6 +650,13 @@ def getUserStats(request):
             for item in brand_stats:
                 brand_distribution[item['brand']] = item['count']
             
+            # 计算今日新增用户数
+            today = datetime.date.today()
+            today_new_users = User.objects.filter(createTime__date=today).count()
+            
+            # 计算活跃用户数（拥有车辆的用户）
+            active_users = users_with_cars
+            
             return JsonResponse({
                 'success': True,
                 'stats': {
@@ -582,7 +665,9 @@ def getUserStats(request):
                     'totalCars': total_cars,
                     'avgCarsPerUser': avg_cars_per_user,
                     'energyDistribution': energy_distribution,
-                    'brandDistribution': brand_distribution
+                    'brandDistribution': brand_distribution,
+                    'todayNewUsers': today_new_users,
+                    'activeUsers': active_users
                 }
             })
         except Exception as e:
@@ -638,7 +723,8 @@ def searchUser(request):
                 user_list.append({
                     'id': user.id,
                     'username': user.username,
-                    'createTime': user.createTime.strftime('%Y-%m-%d %H:%M:%S')
+                    'role': '管理员' if user.id == 1 else '普通用户',  # 直接在后端判断用户角色
+                    'createdAt': user.createTime.strftime('%Y-%m-%d') if user.createTime else ''  # 日期格式化移至后端
                 })
             
             return JsonResponse({'success': True, 'users': user_list})
@@ -684,6 +770,38 @@ def deleteUser(request):
             return JsonResponse({'success': True, 'message': '删除成功'})
         except User.DoesNotExist:
             return JsonResponse({'success': False, 'message': '用户不存在'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def addUser(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+            
+            if not username or not password:
+                return JsonResponse({'success': False, 'message': '缺少用户名或密码'})
+            
+            # 验证用户名长度
+            if len(username) > 8:
+                return JsonResponse({'success': False, 'message': '用户名最多8个字符'})
+            
+            # 验证密码长度
+            if len(password) < 8 or len(password) > 12:
+                return JsonResponse({'success': False, 'message': '密码必须是8-12个字符'})
+            
+            # 检查用户名是否已存在
+            if User.objects.filter(username=username).exists():
+                return JsonResponse({'success': False, 'message': '用户名已存在'})
+            
+            # 创建新用户
+            user = User(username=username, password=password)
+            user.save()
+            
+            return JsonResponse({'success': True, 'message': '添加成功'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
 
@@ -744,5 +862,27 @@ def getUserCarDetails(request):
         return JsonResponse({'success': False, 'message': '用户不存在'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def getCarDataStats(request):
+    if request.method == 'GET':
+        try:
+            # 计算汽车总数
+            total_data = carInfo.objects.count()
+            
+            # 计算能源类型数量
+            energy_types = carInfo.objects.values('energyType').distinct()
+            data_types = energy_types.count()
+            
+            return JsonResponse({
+                'success': True,
+                'stats': {
+                    'totalData': total_data,
+                    'dataTypes': data_types
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
 
 

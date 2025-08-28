@@ -171,17 +171,19 @@
 
 <script>
 import drawMixin from "../utils/drawMixin";
-import { 
-  getUsersList, 
-  searchUsers, 
-  addUser, 
-  updateUser, 
-  deleteUser, 
-  getUserStats, 
-  getUserCarDetails, 
-  getCarInfoList, 
+import {
+  getAdminDashboardData,
+  getUsersList,
+  searchUsers,
+  addUser,
+  updateUser,
+  deleteUser,
+  getUserStats,
+  getUserCarDetails,
+  getCarInfoList,
   searchCarInfo,
-  updateUserCarDetail 
+  updateUserCarDetail,
+  getCarDataStats
 } from '../api/adminApi.js';
 import { showPrompt } from '../utils/index.js';
 
@@ -219,6 +221,7 @@ export default {
         this.fetchUserCarDetails();
       } else if (moduleId === 'dataManagement') {
         this.fetchCarInfoList();
+        this.fetchCarDataStats();
       }
     },
     logout() {
@@ -233,12 +236,8 @@ export default {
         this.loading = true;
         const res = await getUsersList();
         if (res.success) {
-          this.usersData = res.users.map(user => ({
-            id: user.id,
-            username: user.username,
-            role: user.id === 1 ? '管理员' : '普通用户', // 简单判断，实际应该从数据库读取角色字段
-            createdAt: user.createTime ? new Date(user.createTime).toLocaleDateString('zh-CN') : ''
-          }));
+          // 直接使用后端返回的已格式化数据
+          this.usersData = res.users || [];
         } else {
           alert(res.message || '获取用户数据失败');
         }
@@ -260,12 +259,8 @@ export default {
         this.loading = true;
         const res = await searchUsers(this.searchQuery);
         if (res.success) {
-          this.usersData = res.users.map(user => ({
-            id: user.id,
-            username: user.username,
-            role: user.id === 1 ? '管理员' : '普通用户',
-            createdAt: user.createTime ? new Date(user.createTime).toLocaleDateString('zh-CN') : ''
-          }));
+          // 直接使用后端返回的已格式化数据
+          this.usersData = res.users || [];
         } else {
           alert(res.message || '搜索用户失败');
         }
@@ -289,7 +284,7 @@ export default {
         const res = await addUser(username, password);
         if (res.success) {
           alert('用户添加成功');
-          this.fetchUsers();
+          this.fetchDashboardData(); // 使用综合API更新所有数据
         } else {
           alert(res.message || '添加用户失败');
         }
@@ -312,7 +307,7 @@ export default {
         const res = await updateUser(user.id, username, password);
         if (res.success) {
           alert('用户更新成功');
-          this.fetchUsers();
+          this.fetchDashboardData(); // 使用综合API更新所有数据
         } else {
           alert(res.message || '更新用户失败');
         }
@@ -332,7 +327,7 @@ export default {
         const res = await deleteUser(user.id);
         if (res.success) {
           alert('用户删除成功');
-          this.fetchUsers();
+          this.fetchDashboardData(); // 使用综合API更新所有数据
         } else {
           alert(res.message || '删除用户失败');
         }
@@ -380,10 +375,6 @@ export default {
         const res = await getCarInfoList();
         if (res.success) {
           this.carInfoList = res.cars || [];
-          this.totalData = this.carInfoList.length;
-          // 计算数据类型数量（能源类型）
-          const energyTypes = new Set(this.carInfoList.map(car => car.energyType));
-          this.dataTypes = energyTypes.size;
         }
       } catch (error) {
         console.error('获取汽车信息列表失败:', error);
@@ -411,6 +402,19 @@ export default {
         alert('搜索汽车信息失败，请稍后重试');
       } finally {
         this.loading = false;
+      }
+    },
+    
+    async fetchCarDataStats() {
+      // 获取汽车数据统计
+      try {
+        const res = await getCarDataStats();
+        if (res.success) {
+          this.totalData = res.stats.totalData || 0;
+          this.dataTypes = res.stats.dataTypes || 0;
+        }
+      } catch (error) {
+        console.error('获取汽车数据统计失败:', error);
       }
     },
     
@@ -444,7 +448,7 @@ export default {
         
         if (res.success) {
           alert('用户车辆详情更新成功');
-          this.fetchUserCarDetails();
+          this.fetchDashboardData(); // 使用综合API更新所有数据
         } else {
           alert(res.message || '更新用户车辆详情失败');
         }
@@ -454,21 +458,49 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    
+    async fetchDashboardData() {
+      // 调用综合API一次性获取所有数据
+      try {
+        this.loading = true;
+        const res = await getAdminDashboardData();
+        if (res.success) {
+          this.usersData = res.users || [];
+          this.userCount = res.userStats.totalUsers || 0;
+          this.todayNewUsers = res.userStats.todayNewUsers || 0;
+          this.activeUsers = res.userStats.activeUsers || 0;
+          this.carInfoList = res.carInfoList || [];
+          this.userCarDetails = res.userCarDetails || [];
+          this.totalData = res.totalData || 0;
+          this.dataTypes = res.dataTypes || 0;
+        }
+      } catch (error) {
+        console.error('获取仪表盘数据失败:', error);
+        // 如果综合API失败，回退到单独调用各个API
+        try {
+          await Promise.all([
+            this.fetchUsers(),
+            this.fetchUserStats(),
+            this.fetchCarInfoList(),
+            this.fetchUserCarDetails(),
+            this.fetchCarDataStats()
+          ]);
+        } catch (fallbackError) {
+          console.error('回退API调用也失败:', fallbackError);
+        }
+      } finally {
+        this.loading = false;
+      }
     }
   },
   created() {
-    // 在组件创建时就加载数据，确保页面加载时有数据显示
-    this.fetchUsers();
-    this.fetchUserStats();
-    this.fetchCarInfoList();
-    this.fetchUserCarDetails();
+    // 在组件创建时调用综合API加载所有数据
+    this.fetchDashboardData();
   },
   mounted() {
-    // 初始化加载数据
-    this.fetchUsers();
-    this.fetchUserStats();
-    this.fetchCarInfoList();
-    this.fetchUserCarDetails();
+    // 组件挂载时调用综合API加载所有数据
+    this.fetchDashboardData();
   }
 }
 </script>

@@ -26,4 +26,5 @@ urlpatterns = [
     path("deleteUser/", views.deleteUser, name="deleteUser"),
     path("getUserCarDetails/", views.getUserCarDetails, name="getUserCarDetails"),
     path("searchCarInfo/", views.searchCarInfo, name="searchCarInfo"),
+    path("getCarDataStats/", views.getCarDataStats, name="getCarDataStats"),
 ]
