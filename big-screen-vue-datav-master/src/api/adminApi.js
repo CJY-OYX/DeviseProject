@@ -14,8 +14,8 @@ export const getUsersList = async () => {
 // 搜索用户
 export const searchUsers = async (username) => {
   try {
-    const response = await service.get('/myApp/searchUsers/', {
-      params: { username }
+    const response = await service.post('/myApp/searchUser/', {
+      keyword: username
     })
     return response.data
   } catch (error) {
@@ -143,6 +143,17 @@ export const executeDataUpdate = async (updateType) => {
     return response.data
   } catch (error) {
     console.error('执行数据更新失败:', error)
+    throw error
+  }
+}
+
+// 更新用户车辆详情
+export const updateUserCarDetail = async (detailData) => {
+  try {
+    const response = await service.post('/myApp/save_user_car_detail/', detailData)
+    return response.data
+  } catch (error) {
+    console.error('更新用户车辆详情失败:', error)
     throw error
   }
 }

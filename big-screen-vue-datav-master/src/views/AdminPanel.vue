@@ -90,22 +90,26 @@
                 <div class="user-table-container">
                   <table class="user-table">
                     <thead>
-                      <tr>
-                        <th>用户</th>
-                        <th>车辆</th>
-                        <th>型号</th>
-                        <th>购买时间</th>
-                      </tr>
-                    </thead>
+                    <tr>
+                      <th>用户</th>
+                      <th>车辆</th>
+                      <th>型号</th>
+                      <th>购买时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
                     <tbody>
                       <tr v-if="userCarDetails.length === 0">
-                        <td colspan="4" class="no-data">暂无用户车辆数据</td>
+                        <td colspan="5" class="no-data">暂无用户车辆数据</td>
                       </tr>
                       <tr v-for="(detail, index) in userCarDetails" :key="index">
                         <td>{{ detail.username || '未知用户' }}</td>
                         <td>{{ detail.carName || '未知车辆' }}</td>
                         <td>{{ detail.model || '未知型号' }}</td>
                         <td>{{ detail.purchaseDate || '-' }}</td>
+                        <td>
+                          <button class="edit-btn" @click="editUserCarDetail(detail)">编辑</button>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -159,26 +163,6 @@
               </div>
             </div>
           </div>
-
-          <!-- 数据更新模块 -->
-          <div v-else-if="activeModule === 'dataUpdate'" class="admin-module">
-            <h2>数据更新</h2>
-            <div class="module-content">
-              <div class="update-options">
-                <button class="update-btn" @click="performDataUpdate('user')">更新用户数据</button>
-                <button class="update-btn" @click="performDataUpdate('car')">更新车辆数据</button>
-                <button class="update-btn" @click="performDataUpdate('all')">更新所有数据</button>
-              </div>
-              <div class="update-log">
-                <h3>更新日志</h3>
-                <div v-if="updateLogs.length === 0" class="no-data">暂无更新日志</div>
-                <div v-for="log in updateLogs" :key="log.id || log.idx" class="log-item">
-                  <span class="log-time">{{ log.time }}</span>
-                  <span class="log-content">{{ log.content }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -196,9 +180,8 @@ import {
   getUserStats, 
   getUserCarDetails, 
   getCarInfoList, 
-  searchCarInfo, 
-  getUpdateLogs, 
-  executeDataUpdate 
+  searchCarInfo,
+  updateUserCarDetail 
 } from '../api/adminApi.js';
 import { showPrompt } from '../utils/index.js';
 
@@ -211,8 +194,7 @@ export default {
       menuItems: [
         { id: 'userManagement', name: '用户管理' },
         { id: 'userInfoManagement', name: '用户信息管理' },
-        { id: 'dataManagement', name: '数据管理' },
-        { id: 'dataUpdate', name: '数据更新' }
+        { id: 'dataManagement', name: '数据管理' }
       ],
       searchQuery: '',
       // 真实数据存储
@@ -223,8 +205,7 @@ export default {
       userCarDetails: [],
       carInfoList: [],
       totalData: 0,
-      dataTypes: 0,
-      updateLogs: []
+      dataTypes: 0
     }
   },
   methods: {
@@ -238,8 +219,6 @@ export default {
         this.fetchUserCarDetails();
       } else if (moduleId === 'dataManagement') {
         this.fetchCarInfoList();
-      } else if (moduleId === 'dataUpdate') {
-        this.fetchUpdateLogs();
       }
     },
     logout() {
@@ -434,49 +413,62 @@ export default {
         this.loading = false;
       }
     },
-    async fetchUpdateLogs() {
-      // 获取更新日志
+    
+    async editUserCarDetail(detail) {
+      // 编辑用户车辆详情
       try {
-        const res = await getUpdateLogs();
-        if (res.success) {
-          this.updateLogs = res.updateLogs || [];
-        }
-      } catch (error) {
-        console.error('获取更新日志失败:', error);
-      }
-    },
-    async performDataUpdate(updateType) {
-      // 执行数据更新
-      try {
+        const userId = prompt('请输入用户ID:', '');
+        if (!userId) return;
+        
+        const carName = prompt('请输入车辆名称:', detail.carName || '');
+        if (!carName) return;
+        
+        const carModel = prompt('请输入车辆型号:', detail.model || '');
+        if (!carModel) return;
+        
+        const purchaseDate = prompt('请输入购买日期 (YYYY-MM-DD):', detail.purchaseDate || '');
+        if (!purchaseDate) return;
+        
+        const mileage = prompt('请输入行驶里程:', '');
+        const configuration = prompt('请输入车辆配置:', '');
+        
         this.loading = true;
-        const res = await executeDataUpdate(updateType);
+        const res = await updateUserCarDetail({
+          userId,
+          carName,
+          carModel,
+          purchaseDate,
+          mileage,
+          configuration
+        });
+        
         if (res.success) {
-          alert('数据更新成功');
-          this.fetchUpdateLogs();
-          // 更新对应的数据
-          if (updateType === 'user') {
-            this.fetchUsers();
-            this.fetchUserStats();
-          } else if (updateType === 'car') {
-            this.fetchCarInfoList();
-          }
+          alert('用户车辆详情更新成功');
+          this.fetchUserCarDetails();
         } else {
-          alert(res.message || '数据更新失败');
+          alert(res.message || '更新用户车辆详情失败');
         }
       } catch (error) {
-        console.error('执行数据更新失败:', error);
-        alert('数据更新失败，请稍后重试');
+        console.error('更新用户车辆详情失败:', error);
+        alert('更新用户车辆详情失败，请稍后重试');
       } finally {
         this.loading = false;
       }
     }
+  },
+  created() {
+    // 在组件创建时就加载数据，确保页面加载时有数据显示
+    this.fetchUsers();
+    this.fetchUserStats();
+    this.fetchCarInfoList();
+    this.fetchUserCarDetails();
   },
   mounted() {
     // 初始化加载数据
     this.fetchUsers();
     this.fetchUserStats();
     this.fetchCarInfoList();
-    this.fetchUpdateLogs();
+    this.fetchUserCarDetails();
   }
 }
 </script>
