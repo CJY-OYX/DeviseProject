@@ -163,6 +163,57 @@
               </div>
             </div>
           </div>
+          
+          <!-- 数据更新模块 -->
+          <div v-else-if="activeModule === 'dataUpdate'" class="admin-module">
+            <h2>数据更新</h2>
+            <div class="module-content">
+              <div class="update-info">
+                <div class="last-update">
+                  <h3>最后更新时间</h3>
+                  <p class="update-time">{{ lastUpdateTime }}</p>
+                </div>
+              </div>
+              
+              <div class="update-buttons">
+                <button class="start-btn" @click="startDataUpdate" :disabled="isUpdating">
+                  {{ isUpdating ? '更新中...' : '开始更新' }}
+                </button>
+                <button class="stop-btn" @click="stopDataUpdate" :disabled="!isUpdating">
+                  停止更新
+                </button>
+                <button class="refresh-btn" @click="refreshAllData">
+                  刷新数据
+                </button>
+              </div>
+              
+              <div class="update-tips">
+                <h4>更新提示：</h4>
+                <ul>
+                  <li>点击"开始更新"将触发数据爬取脚本，可能需要较长时间</li>
+                  <li>更新过程中请勿关闭页面</li>
+                  <li>如需中断更新，请点击"停止更新"按钮</li>
+                  <li>点击"刷新数据"将重新加载所有管理面板数据</li>
+                </ul>
+              </div>
+              
+              <!-- 爬虫输出日志显示 -->
+              <div class="crawler-logs">
+                <h4>爬取日志：</h4>
+                <div class="logs-container" v-if="isUpdating">
+                  <div class="log-item" v-for="(log, index) in crawlerLogs" :key="index">
+                    {{ log }}
+                  </div>
+                  <div v-if="crawlerLogs.length === 0" class="no-logs">
+                    等待爬取日志输出...
+                  </div>
+                </div>
+                <div v-else class="logs-disabled">
+                  <p>数据更新未开始，暂无日志</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -183,9 +234,12 @@ import {
   getCarInfoList,
   searchCarInfo,
   updateUserCarDetail,
-  getCarDataStats
+  getCarDataStats,
+  getUpdateLogs,
+  executeDataUpdate
 } from '../api/adminApi.js';
 import { showPrompt } from '../utils/index.js';
+import axios from 'axios';
 
 export default {
   mixins: [drawMixin],
@@ -196,7 +250,8 @@ export default {
       menuItems: [
         { id: 'userManagement', name: '用户管理' },
         { id: 'userInfoManagement', name: '用户信息管理' },
-        { id: 'dataManagement', name: '数据管理' }
+        { id: 'dataManagement', name: '数据管理' },
+        { id: 'dataUpdate', name: '数据更新' }
       ],
       searchQuery: '',
       // 真实数据存储
@@ -207,7 +262,12 @@ export default {
       userCarDetails: [],
       carInfoList: [],
       totalData: 0,
-      dataTypes: 0
+      dataTypes: 0,
+      // 数据更新相关
+      lastUpdateTime: '暂无记录',
+      isUpdating: false,
+      crawlerLogs: [],
+      logPollingInterval: null
     }
   },
   methods: {
@@ -222,6 +282,8 @@ export default {
       } else if (moduleId === 'dataManagement') {
         this.fetchCarInfoList();
         this.fetchCarDataStats();
+      } else if (moduleId === 'dataUpdate') {
+        this.fetchLastUpdateTime();
       }
     },
     logout() {
@@ -369,7 +431,7 @@ export default {
       }
     },
     async fetchCarInfoList() {
-      // 获取汽车信息列表
+      // 获取汽车信息列表 - 从allcarinfo表获取
       try {
         this.loading = true;
         const res = await getCarInfoList();
@@ -383,7 +445,7 @@ export default {
       }
     },
     async searchCar() {
-      // 搜索汽车信息
+      // 搜索汽车信息 - 从allcarinfo表搜索
       if (!this.searchQuery.trim()) {
         this.fetchCarInfoList();
         return;
@@ -400,6 +462,120 @@ export default {
       } catch (error) {
         console.error('搜索汽车信息失败:', error);
         alert('搜索汽车信息失败，请稍后重试');
+      } finally {
+        this.loading = false;
+      }
+    },
+    // 获取最后更新时间
+    async fetchLastUpdateTime() {
+      try {
+        const res = await getUpdateLogs();
+        if (res.success && res.logs && res.logs.length > 0) {
+          this.lastUpdateTime = res.logs[0].updateTime || '暂无记录';
+        }
+      } catch (error) {
+        console.error('获取最后更新时间失败:', error);
+      }
+    },
+    // 开始数据更新
+    async startDataUpdate() {
+      if (this.isUpdating) {
+        alert('数据更新正在进行中，请不要重复操作');
+        return;
+      }
+      
+      try {
+        this.isUpdating = true;
+        this.crawlerLogs = []; // 清空之前的日志
+        const res = await executeDataUpdate('full');
+        if (res.success) {
+          alert('数据更新已开始，请耐心等待完成');
+          
+          // 开始轮询获取爬虫日志
+          this.startLogPolling();
+          
+          // 定时检查更新状态，这里简化处理
+          setTimeout(() => {
+            this.stopLogPolling();
+            this.isUpdating = false;
+            this.fetchLastUpdateTime();
+          }, 30000); // 假设30秒后更新完成
+        } else {
+          alert(res.message || '启动数据更新失败');
+          this.isUpdating = false;
+        }
+      } catch (error) {
+        console.error('启动数据更新失败:', error);
+        alert('启动数据更新失败，请稍后重试');
+        this.isUpdating = false;
+      }
+    },
+    
+    // 停止数据更新
+    async stopDataUpdate() {
+      if (!this.isUpdating) {
+        alert('当前没有正在进行的数据更新');
+        return;
+      }
+      
+      try {
+        // 停止日志轮询
+        this.stopLogPolling();
+        
+        const res = await executeDataUpdate('stop');
+        if (res.success) {
+          alert('数据更新已停止');
+          this.isUpdating = false;
+        } else {
+          alert(res.message || '停止数据更新失败');
+        }
+      } catch (error) {
+        console.error('停止数据更新失败:', error);
+        alert('停止数据更新失败，请稍后重试');
+      }
+    },
+    
+    // 开始轮询获取爬虫日志
+    startLogPolling() {
+      // 每2秒获取一次日志
+      this.logPollingInterval = setInterval(() => {
+        this.fetchCrawlerLogs();
+      }, 2000);
+    },
+    
+    // 停止轮询获取爬虫日志
+    stopLogPolling() {
+      if (this.logPollingInterval) {
+        clearInterval(this.logPollingInterval);
+        this.logPollingInterval = null;
+      }
+    },
+    
+    // 获取爬虫日志
+    async fetchCrawlerLogs() {
+      try {
+        const response = await axios.get('/api/getCrawlerLogs/');
+        if (response.data && response.data.success) {
+          this.crawlerLogs = response.data.logs || [];
+        } else {
+          console.error('获取爬虫日志失败:', response.data?.message || '未知错误');
+          this.crawlerLogs = [];
+        }
+      } catch (error) {
+        console.error('获取爬虫日志时发生错误:', error);
+        this.crawlerLogs = [];
+      }
+    },
+    // 刷新所有数据
+    async refreshAllData() {
+      try {
+        this.loading = true;
+        await this.fetchDashboardData();
+        await this.fetchLastUpdateTime();
+        alert('数据刷新成功');
+      } catch (error) {
+        console.error('数据刷新失败:', error);
+        alert('数据刷新失败，请稍后重试');
       } finally {
         this.loading = false;
       }

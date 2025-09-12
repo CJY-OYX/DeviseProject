@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试API调用</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .container { margin-top: 20px; }
+        button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        button:hover { background-color: #45a049; }
+        .logs { margin-top: 20px; padding: 10px; background-color: #f0f0f0; height: 300px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>测试 executeDataUpdate API</h1>
+    
+    <div class="container">
+        <button onclick="testDirectApiCall()">直接调用后端API</button>
+        <button onclick="testFrontendApiCall()">模拟前端API调用</button>
+        <button onclick="clearLogs()">清空日志</button>
+    </div>
+    
+    <div class="logs" id="logs"></div>
+    
+    <script>
+        const logsElement = document.getElementById('logs');
+        
+        function log(message) {
+            const now = new Date().toLocaleTimeString();
+            logsElement.innerHTML += `[${now}] ${message}\n`;
+            logsElement.scrollTop = logsElement.scrollHeight;
+        }
+        
+        function clearLogs() {
+            logsElement.innerHTML = '';
+        }
+        
+        // 直接调用后端API
+        async function testDirectApiCall() {
+            log('开始直接调用后端API...');
+            try {
+                const response = await axios.post('http://127.0.0.1:8000/myApp/executeDataUpdate/', {
+                    updateType: 'full'
+                }, {
+                    timeout: 40000,
+                    withCredentials: true
+                });
+                log(`API调用成功！响应数据: ${JSON.stringify(response.data)}`);
+            } catch (error) {
+                log(`API调用失败: ${error.message}`);
+                if (error.response) {
+                    log(`错误响应状态: ${error.response.status}`);
+                    log(`错误响应数据: ${JSON.stringify(error.response.data)}`);
+                } else if (error.request) {
+                    log('没有收到响应，可能是网络问题或服务器未启动');
+                } else {
+                    log(`请求配置错误: ${error.message}`);
+                }
+            }
+        }
+        
+        // 模拟前端API调用
+        async function testFrontendApiCall() {
+            log('开始模拟前端API调用...');
+            try {
+                // 创建与前端相同的service配置
+                const service = axios.create({
+                    baseURL: 'http://127.0.0.1:8000/',
+                    timeout: 40000,
+                    withCredentials: true
+                });
+                
+                const response = await service.post('/myApp/executeDataUpdate/', {
+                    updateType: 'full'
+                });
+                
+                log(`模拟前端API调用成功！响应数据: ${JSON.stringify(response.data)}`);
+            } catch (error) {
+                log(`模拟前端API调用失败: ${error.message}`);
+                if (error.response) {
+                    log(`错误响应状态: ${error.response.status}`);
+                    log(`错误响应数据: ${JSON.stringify(error.response.data)}`);
+                } else if (error.request) {
+                    log('没有收到响应，可能是网络问题或服务器未启动');
+                } else {
+                    log(`请求配置错误: ${error.message}`);
+                }
+            }
+        }
+        
+        // 页面加载时检查服务器连接
+        window.onload = function() {
+            log('页面已加载。点击按钮开始测试API调用。');
+        };
+    </script>
+</body>
+</html>

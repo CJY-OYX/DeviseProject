@@ -2,7 +2,7 @@ from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
-from .models import User, carInfo, UserCarDetail
+from .models import User, carInfo, UserCarDetail, AllCarInfo
 from rest_framework.decorators import api_view
 import json
 import datetime
@@ -15,8 +15,14 @@ from .utils import getCenterChangeData
 from .utils import getBottomRightData
 import re
 from django.db.models import Count, Avg, Q
+import subprocess
+import sys
+import os
 
 # Create your views here.
+
+# 全局变量用于存储爬虫进程
+crawler_process = None
 def center(request):
     if request.method == 'GET':
         sumCar, highVolume, topCar, mostModel, mostBrand, averagePrice = getCenterData.getBaseData()
@@ -470,8 +476,8 @@ def getAdminDashboardData(request):
             today = datetime.date.today()
             today_new_users = User.objects.filter(createTime__date=today).count()
             
-            # 获取汽车信息列表
-            cars = carInfo.objects.all()
+            # 获取汽车信息列表 - 从allcarinfo表获取
+            cars = AllCarInfo.objects.all()
             car_list = []
             for car in cars:
                 # 处理价格数据
@@ -519,7 +525,7 @@ def getAdminDashboardData(request):
                 'carInfoList': car_list,
                 'userCarDetails': details_list,
                 'totalData': len(car_list),
-                'dataTypes': carInfo.objects.values('energyType').distinct().count()
+                'dataTypes': AllCarInfo.objects.values('energyType').distinct().count()
             })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
@@ -545,7 +551,8 @@ def getUsersList(request):
 def getCarInfoList(request):
     if request.method == 'GET':
         try:
-            cars = carInfo.objects.all()
+            # 从allcarinfo表获取数据
+            cars = AllCarInfo.objects.all()
             car_list = []
             for car in cars:
                 # 处理价格数据
@@ -583,8 +590,8 @@ def searchCarInfo(request):
             if not carName:
                 return JsonResponse({'success': False, 'message': '请输入搜索关键词'})
             
-            # 在carInfo表中搜索类似匹配的车辆，支持品牌、车型和车名的搜索
-            cars = carInfo.objects.filter(
+            # 在allcarinfo表中搜索类似匹配的车辆，支持品牌、车型和车名的搜索
+            cars = AllCarInfo.objects.filter(
                 Q(brand__icontains=carName) | 
                 Q(carName__icontains=carName) | 
                 Q(carModel__icontains=carName)
@@ -630,22 +637,22 @@ def getUserStats(request):
             # 计算拥有车辆的用户数
             users_with_cars = UserCarDetail.objects.values('user').distinct().count()
             
-            # 计算汽车总数
-            total_cars = carInfo.objects.count()
+            # 计算汽车总数 - 从allcarinfo表获取
+            total_cars = AllCarInfo.objects.count()
             
             # 计算平均每用户车辆数
             avg_cars_per_user = 0
             if total_users > 0:
                 avg_cars_per_user = round(users_with_cars / total_users, 2)
             
-            # 获取能源类型分布
-            energy_stats = carInfo.objects.values('energyType').annotate(count=Count('id'))
+            # 获取能源类型分布 - 从allcarinfo表获取
+            energy_stats = AllCarInfo.objects.values('energyType').annotate(count=Count('id'))
             energy_distribution = {}
             for item in energy_stats:
                 energy_distribution[item['energyType']] = item['count']
             
-            # 获取品牌分布
-            brand_stats = carInfo.objects.values('brand').annotate(count=Count('id'))
+            # 获取品牌分布 - 从allcarinfo表获取
+            brand_stats = AllCarInfo.objects.values('brand').annotate(count=Count('id'))
             brand_distribution = {}
             for item in brand_stats:
                 brand_distribution[item['brand']] = item['count']
@@ -684,21 +691,24 @@ def getUpdateLogs(request):
                     'timestamp': '2023-08-26 10:30:00',
                     'operation': '系统更新',
                     'description': '优化了数据加载性能',
-                    'operator': '系统管理员'
+                    'operator': '系统管理员',
+                    'updateTime': '2023-08-26 10:30:00'
                 },
                 {
                     'id': 2,
                     'timestamp': '2023-08-25 15:45:00',
                     'operation': '数据更新',
                     'description': '更新了车辆信息数据',
-                    'operator': '数据管理员'
+                    'operator': '数据管理员',
+                    'updateTime': '2023-08-25 15:45:00'
                 },
                 {
                     'id': 3,
                     'timestamp': '2023-08-24 09:15:00',
                     'operation': '用户添加',
                     'description': '添加了3个新用户',
-                    'operator': '系统管理员'
+                    'operator': '系统管理员',
+                    'updateTime': '2023-08-24 09:15:00'
                 }
             ]
             return JsonResponse({'success': True, 'logs': logs})
@@ -868,11 +878,11 @@ def getUserCarDetails(request):
 def getCarDataStats(request):
     if request.method == 'GET':
         try:
-            # 计算汽车总数
-            total_data = carInfo.objects.count()
+            # 计算汽车总数 - 从allcarinfo表获取
+            total_data = AllCarInfo.objects.count()
             
-            # 计算能源类型数量
-            energy_types = carInfo.objects.values('energyType').distinct()
+            # 计算能源类型数量 - 从allcarinfo表获取
+            energy_types = AllCarInfo.objects.values('energyType').distinct()
             data_types = energy_types.count()
             
             return JsonResponse({
@@ -884,5 +894,218 @@ def getCarDataStats(request):
             })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
+
+
+import sys
+import subprocess
+import os
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+# 执行数据更新
+@csrf_exempt
+def executeDataUpdate(request):
+    # 在函数开头声明使用全局变量
+    global crawler_process
+    
+    if request.method == 'POST':
+        try:
+            # 同时支持从request.body和request.POST获取参数
+            try:
+                data = json.loads(request.body)
+                update_type = data.get('updateType', 'full')
+            except json.JSONDecodeError:
+                # 如果body不是JSON格式，尝试从POST表单获取
+                update_type = request.POST.get('updateType', 'full')
+            
+            if update_type == 'full':
+                # 获取项目根目录
+                project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                print(f"项目根目录: {project_root}")
+                
+                # 设置环境变量
+                env = os.environ.copy()
+                env['PYTHONPATH'] = project_root
+                # 明确设置Django设置模块
+                env['DJANGO_SETTINGS_MODULE'] = 'DeviseProject.settings'
+                print(f"设置后的PYTHONPATH: {env['PYTHONPATH']}")
+                print(f"设置后的DJANGO_SETTINGS_MODULE: {env['DJANGO_SETTINGS_MODULE']}")
+                
+                # 正确的爬虫脚本路径
+                spider_script_path = os.path.join(project_root, 'spiderMan', 'spiders.py')
+                print(f"爬虫脚本路径: {spider_script_path}")
+                
+                # 确保爬虫脚本存在
+                if not os.path.exists(spider_script_path):
+                    error_msg = f"爬虫脚本不存在: {spider_script_path}"
+                    print(error_msg)
+                    return JsonResponse({
+                        'success': False,
+                        'message': error_msg
+                    })
+                
+                # 创建日志文件路径
+                log_file_path = os.path.join(project_root, 'spiderMan', 'crawler_logs.txt')
+                
+                # 清除之前的日志
+                if os.path.exists(log_file_path):
+                    with open(log_file_path, 'w', encoding='utf-8') as f:
+                        f.write('')
+                
+                # 使用subprocess.Popen启动爬虫脚本，不使用shell=True以提高安全性
+                process = subprocess.Popen(
+                    [sys.executable, spider_script_path],  # 使用sys.executable确保使用正确的Python解释器
+                    env=env,
+                    cwd=project_root,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+                
+                # 保存进程ID到会话或其他存储方式，以便后续可以终止它
+                # 这里为了简化，我们将进程ID保存到全局变量
+                global crawler_process
+                crawler_process = process
+                
+                # 创建一个线程来读取输出并写入日志文件
+                def read_output(process, log_file):
+                    with open(log_file, 'a', encoding='utf-8') as f:
+                        while True:
+                            output = process.stdout.readline()
+                            if output == '' and process.poll() is not None:
+                                break
+                            if output:
+                                # 写入到日志文件
+                                f.write(output.strip() + '\n')
+                                f.flush()  # 立即写入文件，不缓冲
+                            
+                        # 读取错误输出
+                        error_output = process.stderr.read()
+                        if error_output:
+                            f.write(f"错误: {error_output.strip()}\n")
+                            f.flush()
+                
+                # 启动线程读取输出
+                import threading
+                log_thread = threading.Thread(target=read_output, args=(process, log_file_path))
+                log_thread.daemon = True
+                log_thread.start()
+                
+                print(f"成功启动爬虫进程，PID: {process.pid}")
+                return JsonResponse({
+                    'success': True,
+                    'message': '数据更新已开始，请耐心等待完成'
+                })
+            elif update_type == 'stop':
+                # 停止数据更新的逻辑
+                try:
+                    if crawler_process and crawler_process.poll() is None:
+                        # 进程仍在运行，尝试终止它
+                        # 在Windows系统上使用terminate
+                        # 在Unix系统上可能需要使用kill
+                        try:
+                            crawler_process.terminate()
+                            # 等待进程终止，最多等待5秒
+                            crawler_process.wait(timeout=5)
+                            # 记录到日志文件
+                            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                            log_file_path = os.path.join(project_root, 'spiderMan', 'crawler_logs.txt')
+                            with open(log_file_path, 'a', encoding='utf-8') as f:
+                                f.write('\n数据更新已被用户手动停止\n')
+                            
+                            print(f"成功终止爬虫进程，PID: {crawler_process.pid}")
+                            crawler_process = None
+                            return JsonResponse({
+                                'success': True,
+                                'message': '数据更新已停止'
+                            })
+                        except subprocess.TimeoutExpired:
+                            # 超时，强制终止
+                            crawler_process.kill()
+                            print(f"强制终止爬虫进程，PID: {crawler_process.pid}")
+                            crawler_process = None
+                            return JsonResponse({
+                                'success': True,
+                                'message': '数据更新已强制停止'
+                            })
+                    else:
+                        # 进程已不存在或已结束
+                        print("没有正在运行的爬虫进程")
+                        return JsonResponse({
+                            'success': True,
+                            'message': '没有正在运行的数据更新'
+                        })
+                except Exception as stop_error:
+                    error_msg = f"停止数据更新时出错: {str(stop_error)}"
+                    print(error_msg)
+                    return JsonResponse({
+                        'success': False,
+                        'message': error_msg
+                    })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': '不支持的更新类型'
+                })
+        except Exception as e:
+            # 记录详细的错误信息
+            error_msg = f"执行数据更新失败: {str(e)}"
+            print(error_msg)
+            return JsonResponse({
+                'success': False,
+                'message': error_msg
+            })
+    else:
+        return JsonResponse({
+            'success': False,
+            'message': '仅支持POST请求'
+        })
+
+
+@csrf_exempt
+def getCrawlerLogs(request):
+    if request.method == 'GET':
+        try:
+            # 获取项目根目录
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            
+            # 日志文件路径
+            log_file_path = os.path.join(project_root, 'spiderMan', 'crawler_logs.txt')
+            
+            # 检查日志文件是否存在
+            if not os.path.exists(log_file_path):
+                return JsonResponse({
+                    'success': True,
+                    'logs': []
+                })
+            
+            # 读取日志文件内容
+            with open(log_file_path, 'r', encoding='utf-8') as f:
+                logs = f.readlines()
+            
+            # 去除每行的换行符
+            logs = [log.strip() for log in logs]
+            
+            # 限制返回的日志数量，避免数据过大
+            max_logs = 100
+            recent_logs = logs[-max_logs:] if len(logs) > max_logs else logs
+            
+            return JsonResponse({
+                'success': True,
+                'logs': recent_logs
+            })
+        except Exception as e:
+            error_msg = f"获取爬虫日志失败: {str(e)}"
+            print(error_msg)
+            return JsonResponse({
+                'success': False,
+                'message': error_msg
+            })
+    else:
+        return JsonResponse({
+            'success': False,
+            'message': '仅支持GET请求'
+        })
 
 

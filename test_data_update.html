@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试数据更新接口</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button#stopBtn {
+            background-color: #f44336;
+        }
+        button#stopBtn:hover {
+            background-color: #d32f2f;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .status {
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>测试数据更新接口</h1>
+    
+    <div class="container">
+        <p>此页面用于测试 <code>executeDataUpdate</code> 接口是否正常工作。点击下方按钮开始或停止数据更新。</p>
+        
+        <div style="text-align: center;">
+            <button id="startBtn">开始数据更新</button>
+            <button id="stopBtn">停止数据更新</button>
+            <button id="checkServerBtn">检查服务器连接</button>
+        </div>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="result">
+            <strong>响应结果:</strong>
+            <pre id="resultText">(请点击按钮开始测试)</pre>
+        </div>
+        
+        <div class="result">
+            <strong>请求详情:</strong>
+            <pre id="requestDetails">(暂无请求)</pre>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>注意：此测试页面仅用于开发环境验证，实际使用请通过管理后台操作。</p>
+    </div>
+
+    <script>
+        // 后端API的基础URL
+        const BASE_URL = 'http://localhost:8000'; // 假设Django服务器运行在8000端口
+        
+        // 获取DOM元素
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const checkServerBtn = document.getElementById('checkServerBtn');
+        const statusElement = document.getElementById('status');
+        const resultText = document.getElementById('resultText');
+        const requestDetails = document.getElementById('requestDetails');
+        
+        // 设置状态消息
+        function setStatus(message, type = 'info') {
+            statusElement.textContent = message;
+            statusElement.className = 'status ' + type;
+        }
+        
+        // 格式化JSON输出
+        function formatJson(obj) {
+            try {
+                return JSON.stringify(obj, null, 2);
+            } catch (e) {
+                return String(obj);
+            }
+        }
+        
+        // 执行数据更新请求
+        async function executeDataUpdate(updateType) {
+            const url = `${BASE_URL}/myApp/executeDataUpdate/`;
+            const method = 'POST';
+            
+            setStatus('正在发送请求...', 'loading');
+            resultText.textContent = '等待响应...';
+            
+            try {
+                // 准备请求数据
+                const requestData = new URLSearchParams();
+                requestData.append('updateType', updateType);
+                
+                // 记录请求详情
+                const requestInfo = {
+                    url,
+                    method,
+                    params: { updateType }
+                };
+                requestDetails.textContent = formatJson(requestInfo);
+                
+                // 发送请求
+                const startTime = Date.now();
+                const response = await fetch(url, {
+                    method,
+                    body: requestData,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCSRFToken() // 尝试获取CSRF令牌
+                    },
+                    credentials: 'same-origin' // 包含Cookie
+                });
+                const endTime = Date.now();
+                
+                // 解析响应
+                const data = await response.json();
+                
+                // 显示结果
+                resultText.textContent = formatJson({
+                    ...data,
+                    responseTime: `${endTime - startTime}ms`,
+                    statusCode: response.status
+                });
+                
+                // 设置状态
+                if (data.success || data.status === 'success') {
+                    setStatus(`操作成功: ${data.message || '请求已发送'}`, 'success');
+                } else {
+                    setStatus(`操作失败: ${data.message || '未知错误'}`, 'error');
+                }
+                
+            } catch (error) {
+                resultText.textContent = `请求失败: ${error.message}`;
+                setStatus(`请求错误: ${error.message}`, 'error');
+                console.error('请求出错:', error);
+            }
+        }
+        
+        // 获取CSRF令牌（如果有的话）
+        function getCSRFToken() {
+            try {
+                const cookieValue = document.cookie
+                    .split('; ') 
+                    .find(row => row.startsWith('csrftoken=')) 
+                    ?.split('=')[1];
+                return cookieValue || '';
+            } catch (e) {
+                return '';
+            }
+        }
+        
+        // 检查服务器连接
+        async function checkServerConnection() {
+            setStatus('正在检查服务器连接...', 'loading');
+            resultText.textContent = '测试连接中...';
+            requestDetails.textContent = '检查服务器是否可达';
+            
+            try {
+                const response = await fetch(BASE_URL, {
+                    method: 'GET',
+                    timeout: 5000,
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok) {
+                    setStatus('服务器连接正常', 'success');
+                    resultText.textContent = `服务器响应状态: ${response.status} ${response.statusText}`;
+                } else {
+                    setStatus('服务器响应异常', 'error');
+                    resultText.textContent = `服务器返回错误状态: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                setStatus(`无法连接到服务器: ${error.message}`, 'error');
+                resultText.textContent = `连接失败: ${error.message}`;
+            }
+        }
+        
+        // 绑定事件监听器
+        startBtn.addEventListener('click', () => executeDataUpdate('full'));
+        stopBtn.addEventListener('click', () => executeDataUpdate('stop'));
+        checkServerBtn.addEventListener('click', checkServerConnection);
+        
+        // 页面加载时检查服务器连接
+        window.addEventListener('load', () => {
+            setStatus('准备就绪，请点击按钮进行测试', 'info');
+            // 可选：自动检查服务器连接
+            // checkServerConnection();
+        });
+    </script>
+</body>
+</html>

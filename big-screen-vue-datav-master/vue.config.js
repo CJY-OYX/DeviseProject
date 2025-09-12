@@ -9,4 +9,20 @@ module.exports = {
     config.resolve.alias
       .set('_c', resolve('src/components')) // key,value自行定义，比如.set('@@', resolve('src/components'))
   },
+  devServer: {
+    port: 8080,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api': '/myApp'
+        }
+      },
+      '/myApp': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      }
+    }
+  }
 }
