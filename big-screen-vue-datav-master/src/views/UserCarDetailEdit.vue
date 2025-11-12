@@ -29,12 +29,12 @@
             <div class="react-left ml-4 react-l-s" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
               <span class="text" @click="goToHome">首页</span>
             </div>
-            <div class="react-left ml-3" :style="{ backgroundColor: !isHomePage ? '#9c27b0' : '#2196f3' }">
+            <div class="react-left ml-3 react-l-s" :style="{ backgroundColor: !isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
               <span class="text" @click="goToEdit">编辑</span>
             </div>
           </div>
           <div class="d-flex aside-width">
-            <div class="react-right bg-color-green mr-3" v-if="isLoggedIn">
+            <div class="react-right bg-color-green mr-3" v-if="isLoggedIn" style="display: flex; justify-content: center; align-items: center; width: 300px;">
               <span class="text fw-b" @click="entryInfo">{{ username }}</span>
             </div>
             <div class="react-right mr-4 react-l-s">
@@ -88,7 +88,6 @@ import Vue from 'vue'
 import DataV from '@jiaminghi/data-view'
 import axios from 'axios'
 import drawMixin from "../utils/drawMixin"
-import { formatTime } from '../utils/index.js'
 
 Vue.use(DataV)
 
@@ -137,10 +136,10 @@ export default {
   },
   methods: {
     updateTime() {
-      const time = formatTime();
-      this.dateYear = time.year;
-      this.dateWeek = time.week;
-      this.dateDay = time.day;
+      const now = new Date();
+      this.dateYear = now.getFullYear() + '年';
+      this.dateWeek = now.getMonth() + 1 + '月' + now.getDate() + '日';
+      this.dateDay = this.weekday[now.getDay()];
     },
     
     goToHome() {

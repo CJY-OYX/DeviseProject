@@ -21,12 +21,10 @@ class spider(object):
         try:
             with open('./spiderPage.txt','r') as r_f:
                 lines = r_f.readlines()
-                # 如果文件为空，返回'0'作为默认值
                 if not lines:
                     return '0'
                 return lines[-1].strip()
         except FileNotFoundError:
-            # 如果文件不存在，创建文件并返回'0'
             with open('./spiderPage.txt','w') as w_f:
                 w_f.write('')
             return '0'
@@ -36,10 +34,8 @@ class spider(object):
             a_f.write('\n'+str(newPage))
 
     def main(self):
-        # 使用循环替代递归，确保能够正确返回到主程序流程
         while True:
             count = self.get_page()
-            
             params = {
                 'offset':int(count)
             }
@@ -49,8 +45,7 @@ class spider(object):
             try:
                 pageJson = requests.get(self.spiderUrl, headers=headers, params=params).json()
                 pageJson = pageJson['data']['list']
-                
-                # 如果没有数据了也停止爬取
+
                 if not pageJson:
                     print("没有更多数据可爬取，停止爬取")
                     return
@@ -95,13 +90,9 @@ class spider(object):
                     self.save_to_csv(carData)
             except Exception as e:
                 print(f"爬取过程中出现错误: {e}")
-                # 继续下一轮循环，尝试重新爬取
                 continue
-            
-            # 更新页码
+
             self.set_page(int(count) + 10)
-            
-            # 添加延迟，避免请求过于频繁
             time.sleep(1)
 
     def save_to_csv(self, resultData):
@@ -118,18 +109,17 @@ class spider(object):
 
     def save_to_sql(self):
         data = self.clear_csv()
-        
-        # 覆盖carInfo表：先清空，再插入
+
         print("清空carInfo表数据...")
         carInfo.objects.all().delete()
         
         print("开始保存数据到数据库...")
-        # 准备批量创建对象列表
+        # 批量创建对象列表
         car_info_objects = []
         all_car_info_objects = []
         
         for car in data:
-            # 为carInfo表创建对象（将批量插入）
+            # 创建carInfo表对象
             car_info_objects.append(
                 carInfo(
                     brand = car[0],

@@ -227,7 +227,6 @@ export default {
       });
     },
     fetchUserCarDetail() {
-      console.log('【1】开始调用 /get-user-car-detail');
       return axios
         .post('http://localhost:8000/myApp/get-user-car-detail/', {
           username: this.username
