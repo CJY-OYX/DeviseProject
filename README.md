@@ -512,6 +512,5 @@ loopAnimation(){
 <div ref="chart" style="width: 300px;height: 340px" v-bind:key="cdata.seriesData[0][0]"></div>
 ```
 
-# 写不下去了看视频去吧：
 
 https://player.bilibili.com/player.html?isOutside=true&amp;aid=235025686&amp;bvid=BV1Ne411d7X3&amp;cid=1310805862&amp;p=20
