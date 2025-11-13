@@ -1,10 +1,23 @@
 from os import write
+import sys
+import os
 
-import requests,csv,os,time,json,re,django,pandas as pd,random
+# 添加项目根目录到Python路径
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import requests,csv,time,json,re,pandas as pd,random
 from lxml import etree
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "DeviseProject.settings")
-django.setup()
-from myApp.models import carInfo, AllCarInfo
+
+# 尝试设置Django环境，如果失败则跳过数据库操作
+try:
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "DeviseProject.settings")
+    django.setup()
+    from myApp.models import carInfo, AllCarInfo
+    DJANGO_AVAILABLE = True
+except Exception as e:
+    print(f"Django环境初始化失败: {e}")
+    print("将以测试模式运行，不连接数据库")
+    DJANGO_AVAILABLE = False
 
 class spider(object):
     #定义初始化函数
@@ -34,6 +47,9 @@ class spider(object):
             a_f.write('\n'+str(newPage))
 
     def main(self):
+        max_retries = 3
+        retry_count = 0
+        
         while True:
             count = self.get_page()
             params = {
@@ -44,6 +60,12 @@ class spider(object):
             
             try:
                 pageJson = requests.get(self.spiderUrl, headers=headers, params=params).json()
+                
+                # 检查响应结构
+                if 'data' not in pageJson or 'list' not in pageJson['data']:
+                    print("响应数据结构异常，停止爬取")
+                    return
+                
                 pageJson = pageJson['data']['list']
 
                 if not pageJson:
@@ -75,25 +97,67 @@ class spider(object):
 
                     infoHTML = requests.get("https://www.dongchedi.com/auto/params-carIds-x-%s" % carNumber, headers=headers)
                     infoHTMLpath = etree.HTML(infoHTML.text)
-                    # 车型
-                    carModel = infoHTMLpath.xpath("//div[@data-row-anchor='jb']/div[2]/div/text()")[0]
+                    
+                    # 车型 - 添加异常处理
+                    try:
+                        carModel = infoHTMLpath.xpath("//div[@data-row-anchor='jb']/div[2]/div/text()")[0]
+                    except (IndexError, AttributeError):
+                        carModel = "未知"
                     carData.append(carModel)
-                    # 能源类型
-                    energyType = infoHTMLpath.xpath("//div[@data-row-anchor='fuel_form']/div[2]/div/text()")[0]
+                    
+                    # 能源类型 - 添加异常处理
+                    try:
+                        energyType = infoHTMLpath.xpath("//div[@data-row-anchor='fuel_form']/div[2]/div/text()")[0]
+                    except (IndexError, AttributeError):
+                        energyType = "未知"
                     carData.append(energyType)
-                    # 上市时间
-                    marketTime = infoHTMLpath.xpath("//div[@data-row-anchor='market_time']/div[2]/div/text()")[0]
+                    
+                    # 上市时间 - 添加异常处理
+                    try:
+                        marketTime = infoHTMLpath.xpath("//div[@data-row-anchor='market_time']/div[2]/div/text()")[0]
+                    except (IndexError, AttributeError):
+                        marketTime = "未知"
                     carData.append(marketTime)
-                    # 保修期限
-                    insure = infoHTMLpath.xpath("//div[@data-row-anchor='period']/div[2]/div/text()")[0]
+                    
+                    # 保修期限 - 添加异常处理
+                    try:
+                        insure = infoHTMLpath.xpath("//div[@data-row-anchor='period']/div[2]/div/text()")[0]
+                    except (IndexError, AttributeError):
+                        insure = "未知"
                     carData.append(insure)
+                    
                     self.save_to_csv(carData)
+                
+                # 重置重试计数
+                retry_count = 0
+                
+            except requests.exceptions.RequestException as e:
+                print(f"网络请求错误: {e}")
+                retry_count += 1
+                if retry_count >= max_retries:
+                    print(f"达到最大重试次数({max_retries})，停止爬取")
+                    return
+                time.sleep(2)  # 重试前等待
+                continue
+                
+            except json.JSONDecodeError as e:
+                print(f"JSON解析错误: {e}")
+                return
+                
             except Exception as e:
                 print(f"爬取过程中出现错误: {e}")
+                retry_count += 1
+                if retry_count >= max_retries:
+                    print(f"达到最大重试次数({max_retries})，停止爬取")
+                    return
+                time.sleep(2)  # 重试前等待
                 continue
 
             self.set_page(int(count) + 10)
-            time.sleep(1)
+            
+            # 添加随机延时，避免被反爬虫
+            sleep_time = random.uniform(1, 3)
+            time.sleep(sleep_time)
 
     def save_to_csv(self, resultData):
         with open('./temp.csv', 'a', newline='', encoding='utf-8') as f:
@@ -108,6 +172,10 @@ class spider(object):
         return df.values
 
     def save_to_sql(self):
+        if not DJANGO_AVAILABLE:
+            print("Django不可用，跳过数据库保存")
+            return
+            
         data = self.clear_csv()
 
         print("清空carInfo表数据...")
