@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" class="gradient-bg fade-in">
     <router-view />
   </div>
 </template>
@@ -8,7 +8,6 @@
 #app {
   width: 100vw;
   height: 100vh;
-  background-color: #020308;
   overflow: hidden;
 }
 </style>

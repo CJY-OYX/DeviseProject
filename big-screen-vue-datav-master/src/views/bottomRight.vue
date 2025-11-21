@@ -23,7 +23,7 @@
             <div>保修时间</div>
             <div>上市时间</div>
           </li>
-          <li v-for="(car, index) in carData" v-bind:key="index + '-' + car.rank">
+          <li v-for="(car, index) in carData" :key="index + '-' + car.rank" @click="openModal(car)" style="cursor:pointer">
             <div>{{ car.rank }}</div>
             <div class="list_img"><img :src="car.carImg" style="height: 100%;width: 100%" alt=""></div>
             <div class="list_info">
@@ -37,6 +37,37 @@
           </li>
         </ul>
       </div>
+      <!-- 详情浮窗 -->
+      <div v-if="showModal" class="custom-modal-container">
+        <div class="custom-modal-overlay" @click="closeModal">
+          <div class="custom-modal" @click.stop>
+            <div class="custom-modal-header">
+              <h3 class="custom-modal-title">车型详情</h3>
+            </div>
+            <div class="custom-modal-body">
+              <div style="display:flex; gap:16px; align-items:center; justify-content:center;">
+                <img :src="selectedCar.carImg" alt="car" style="width:120px;height:80px;object-fit:cover;border-radius:8px;" />
+                <div style="text-align:left">
+                  <p><strong>{{ selectedCar.carName }}</strong></p>
+                  <p style="font-size:13px;color:#94a3b8;">{{ selectedCar.manufacturer }} / {{ selectedCar.brand }}</p>
+                </div>
+              </div>
+              <div style="margin-top:12px;text-align:left">
+                <p>指导价：<strong>{{ selectedCar.price }} 万元</strong></p>
+                <p>销量：<strong>{{ selectedCar.saleVolume }} 辆</strong></p>
+                <p>排名：<strong>{{ selectedCar.rank }}</strong></p>
+                <p>能源类型：<strong>{{ selectedCar.energyType }}</strong></p>
+                <p>上市时间：<strong>{{ selectedCar.marketTime }}</strong></p>
+                <p>保修时间：<strong>{{ selectedCar.insure }}</strong></p>
+              </div>
+            </div>
+            <div class="custom-modal-footer">
+              <button class="custom-modal-cancel-btn" @click="closeModal">关闭</button>
+              <button class="custom-modal-confirm-btn" @click="closeModal">知道了</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -46,7 +77,9 @@
 export default {
   data(){
     return{
-      carData:[]
+      carData:[],
+      showModal: false,
+      selectedCar: {}
     }
   },
   components: {},
@@ -55,6 +88,16 @@ export default {
     const list = res && res.data && Array.isArray(res.data.carData) ? res.data.carData : []
     if (list.length > 0) {
       this.carData = list
+    }
+  },
+  methods: {
+    openModal(car) {
+      this.selectedCar = car || {}
+      this.showModal = true
+    },
+    closeModal() {
+      this.showModal = false
+      this.selectedCar = {}
     }
   }
 };

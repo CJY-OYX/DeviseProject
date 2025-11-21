@@ -1,17 +1,17 @@
 {
   "color": [
-    "#2d8cf0",
-    "#19be6b",
-    "#ff9900",
-    "#E46CBB",
-    "#9A66E4",
-    "#ed3f14"
+    "#00D1FF",
+    "#22D3EE",
+    "#FF4D8D",
+    "#7AA9FF",
+    "#6C7BFF",
+    "#F59E0B"
   ],
   "backgroundColor": "rgba(0,0,0,0)",
   "textStyle": {},
   "title": {
     "textStyle": {
-      "color": "#516b91"
+      "color": "#eaf7ff"
     },
     "subtextStyle": {
       "color": "#93b7e3"

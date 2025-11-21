@@ -1,6 +1,6 @@
 <template>
   <div id="index" ref="appRef">
-    <div class="bg" style="background: url('/VCG41N1312873566.jpg') center/cover no-repeat;position: relative;">
+    <div class="bg themed-bg-home">
       <dv-loading v-if="loading">Loading...</dv-loading>
       <div v-else class="host-body">
         <div class="d-flex jc-center">
@@ -27,11 +27,11 @@
         <!-- 第二行 -->
         <div class="d-flex jc-between px-2">
           <div class="d-flex aside-width">
-            <div class="react-left ml-4 react-l-s" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
+            <div class="react-left ml-4 react-l-s" :class="isHomePage ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
               <span class="text" @click="goToHome">首页</span>
             </div>
-            <div class="react-left ml-3" :style="{ backgroundColor: isEdit ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }
-              "><span class="text" @click="goToEdit">编辑</span>
+            <div class="react-left ml-3 react-l-s" :class="isEdit ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
+              <span class="text" @click="goToEdit">编辑</span>
             </div>
           </div>
           <div class="d-flex aside-width">
@@ -174,13 +174,10 @@ export default {
     entryInfo(){
       axios.post('http://localhost:8000/myApp/entry-user-info/', {username:this.username})
         .then(res => {
-          console.log('Response data:', res.data);
-          console.log('usercarinfo:', res.usercarinfo);
-
           if (res.data.success){
             sessionStorage.setItem('userData', JSON.stringify(res.data));
             sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
-            sessionStorage.setItem('userCarInfo', JSON.stringify(res.usercarinfo));
+            sessionStorage.setItem('userCarInfo', JSON.stringify(res.data.usercarinfo));
             this.$router.push({ path: '/user-detail' });
           }
           else{
@@ -193,45 +190,36 @@ export default {
         });
     },
     goToHome() {
+      if (this.$route.path === '/') return;
       this.$router.push('/');
     },
     goToEdit() {
-      // 检查是否已登录
       if (!this.isLoggedIn) {
         alert('请先登录');
-        this.$router.push('/login');
+        if (this.$route.path !== '/login') this.$router.push('/login');
         return;
       }
-
-      // 检查用户名是否存在
       if (!this.username) {
         alert('未找到用户名，请先登录');
-        this.$router.push('/login');
+        if (this.$route.path !== '/login') this.$router.push('/login');
         return;
       }
-
-      // 根据用户名获取用户和车辆信息
       axios.post('http://localhost:8000/myApp/entry-user-info/', {username: this.username})
         .then(res => {
           if (res.data.success) {
             const userId = res.data.userinfo?.id;
             const carId = res.data.usercarinfo?.id;
-
             if (!userId || !carId) {
               alert('未找到用户或车辆信息，请先完善用户详情');
-              this.$router.push('/user-detail');
+              if (this.$route.path !== '/user-detail') this.$router.push('/user-detail');
               return;
             }
-
-            // 存储用户数据
             sessionStorage.setItem('userData', JSON.stringify(res.data));
             sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
             sessionStorage.setItem('userCarInfo', JSON.stringify(res.data.usercarinfo));
-
-            // 跳转到编辑页面（不携带参数在URL中）
-            this.$router.push({
-              path: '/user-car-detail-edit'
-            });
+            if (this.$route.path !== '/user-car-detail-edit') {
+              this.$router.push({ path: '/user-car-detail-edit' });
+            }
           } else {
             alert(res.data.message || '获取用户信息失败');
           }

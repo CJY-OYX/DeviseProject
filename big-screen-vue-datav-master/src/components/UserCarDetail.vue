@@ -61,20 +61,31 @@ export default {
   },
   computed: {
     newCarPrice() {
-      const range = this.userCarDetail?.priceRange || [6.78, 11.38];
-      return (range[0] + range[1]) / 2;
+      const raw = this.userCarDetail?.priceRange;
+      let range = Array.isArray(raw) ? raw : [];
+      if (range.length < 2 && typeof raw === 'string') {
+        range = raw.split(',').map(v => Number(String(v).trim()));
+      }
+      const a = Number(range[0]);
+      const b = Number(range[1]);
+      const aNum = isFinite(a) ? a : 0;
+      const bNum = isFinite(b) ? b : aNum;
+      const val = (aNum + bNum) / 2;
+      return isFinite(val) ? val : 0;
     },
     yearsOfUse() {
-      const buy = this.userCarDetail?.purchaseDate
-        ? new Date(this.userCarDetail.purchaseDate)
-        : new Date('2021-01-15');
-      return (Date.now() - buy) / (365 * 24 * 3600 * 1000);
+      const buyStr = this.userCarDetail?.purchaseDate;
+      const buy = buyStr ? new Date(buyStr) : new Date();
+      const years = (Date.now() - buy.getTime()) / (365 * 24 * 3600 * 1000);
+      return isFinite(years) && years >= 0 ? years : 0;
     },
     depreciationValue() {
-      return this.newCarPrice * (1 - this.annualDepreciationRate * this.yearsOfUse);
+      const val = this.newCarPrice * (1 - this.annualDepreciationRate * this.yearsOfUse);
+      return isFinite(val) ? val : 0;
     },
     currentValue() {
-      return this.depreciationValue - this.mileageDepreciation - this.marketAdjustment;
+      const val = this.depreciationValue - this.mileageDepreciation - this.marketAdjustment;
+      return isFinite(val) ? Math.max(val, 0) : 0;
     }
   },
   watch: {
@@ -92,8 +103,9 @@ export default {
   },
   methods: {
     buildFlop(num, toFixed, suffix) {
+      const safe = isFinite(num) ? num : 0;
       return {
-        number: [Number(Number(num).toFixed(toFixed))],
+        number: [Number(Number(safe).toFixed(toFixed))],
         content: `{nt}${suffix}`,
         style: { fontSize: 32, fill: '#2ecc71', fontWeight: 'bold' }
       };

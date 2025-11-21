@@ -2,7 +2,7 @@
   <div class="login-container">
     <dv-border-box-1 class="login-border-box">
       <div class="login-bg">
-      <div class="login-form">
+      <form class="login-form" @submit.prevent="handleLogin">
         <h2 class="form-title">用户登录</h2>
         <div class="form-group">
           <label for="username" style="color: white">用户名</label>
@@ -16,13 +16,13 @@
           <input type="checkbox" id="remember" v-model="rememberMe">
           <label for="remember" style="color: white">记住我</label>
         </div>
-        <button class="login-btn" @click="handleLogin">登录</button>
+        <button class="login-btn" type="submit">登录</button>
         <div class="form-footer">
           <!-- <a href="#" class="forgot-password" style="color: white">忘记密码?</a>
           <span> | </span> -->
           <router-link to="/register" class="register" style="color: white">注册账号</router-link>
         </div>
-      </div>
+      </form>
       </div>
     </dv-border-box-1>
   </div>
@@ -41,13 +41,17 @@ export default {
     return {
       username: '',
       password: '',
-      rememberMe: false
+      rememberMe: false,
+      isSubmitting: false
     }
   },
   methods: {
     handleLogin () {
+  if (this.isSubmitting) return
+  this.isSubmitting = true
   if (!this.username || !this.password) {
     alert('请输入用户名和密码')
+    this.isSubmitting = false
     return
   }
   axios.post(
@@ -59,11 +63,15 @@ export default {
       alert(res.data.message)
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('username', this.username);
-      const redirect = this.$route.query.redirect || '/';
-      this.$router.push(redirect);
+      const redirect = this.$route.query.redirect;
+      const target = redirect && redirect !== '/login' ? redirect : '/';
+      this.$router.replace(target);
     } else {
       alert(res.data.message)
     }
+  })
+  .finally(() => {
+    this.isSubmitting = false
   })
 }
   }

@@ -1,6 +1,6 @@
 <template>
   <div id="userInfoDetail" ref="appRef">
-    <div class="bg" style="background: url('/VCG41N1312873566.jpg') center/cover no-repeat;position: relative;">
+    <div class="bg themed-bg-detail">
       <dv-loading v-if="loading">Loading...</dv-loading>
       <div v-else class="host-body">
         <div class="d-flex jc-center">
@@ -26,11 +26,11 @@
         <!-- 第二行 -->
         <div class="d-flex jc-between px-2">
           <div class="d-flex aside-width">
-            <div class="react-left ml-4 react-l-s" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
+            <div class="react-left ml-4 react-l-s" :class="isHomePage ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
               <span class="text" @click="goToHome">首页</span>
             </div>
-            <div class="react-left ml-3" :style="{ backgroundColor: isEdit ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }
-              "><span class="text" @click="goToEdit">编辑</span>
+            <div class="react-left ml-3 react-l-s" :class="isEdit ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
+              <span class="text" @click="goToEdit">编辑</span>
             </div>
           </div>
           <div class="d-flex aside-width">
@@ -47,14 +47,14 @@
         <div class="body-box">
           <div class="content-box">
             <div class="carleft">
-              <CarImg :carInfo="carInfo" />
-              <NumInfo :carInfo="carInfo" />
-              <UserCarInfo :userCarDetail="userCarDetail" />
-              <CarTimers :carDetail="userCarDetail" :carInfo="carInfo" />
+              <CarImg :carInfo="safeCarInfo" />
+              <NumInfo :carInfo="safeCarInfo" />
+              <UserCarInfo :userCarDetail="safeUserCarDetail" />
+              <CarTimers :carDetail="safeUserCarDetail" :carInfo="safeCarInfo" />
             </div>
             <div class="carcenter">
-              <UserCarDetail :userCarDetail="userCarDetail" />
-              <CarInfo :carInfo="carInfo" :userCarDetail="userCarDetail"/>
+              <UserCarDetail :userCarDetail="safeUserCarDetail" />
+              <CarInfo :carInfo="safeCarInfo" :userCarDetail="safeUserCarDetail"/>
             </div>
           </div>
         </div>
@@ -104,6 +104,41 @@ export default {
       isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
       isHomePage: this.$route.path === '/' ,
       isEdit: this.$route.path === '/user-car-detail-edit'
+    }
+  },
+  computed: {
+    safeCarInfo() {
+      const info = this.carInfo || {};
+      const def = {
+        id: null,
+        brand: '',
+        carName: '',
+        carImg: '',
+        saleVolume: 0,
+        price: '[]',
+        manufacturer: '',
+        rank: 0,
+        carModel: '',
+        energyType: '',
+        marketTime: '',
+        insure: '',
+        newprice: []
+      };
+      return { ...def, ...info };
+    },
+    safeUserCarDetail() {
+      const d = this.userCarDetail || {};
+      const def = {
+        id: null,
+        car_name: '',
+        car_model: '',
+        mileage: 0,
+        purchaseDate: new Date().toISOString().slice(0, 10),
+        configuration: '',
+        createTime: '',
+        priceRange: [6.78, 11.38]
+      };
+      return { ...def, ...d };
     }
   },
   mounted() {
@@ -180,71 +215,30 @@ export default {
       }, 1000);
     },
     fetchUserData() {
-        console.log('开始获取用户数据...');
-        if (!this.username) {
-          this.loading = false;
-          return;
-        }
-
-        // 获取用户信息 车辆信息 用户车辆详情
-        Promise.all([
-          this.fetchUserInfo(),
-          this.fetchCarInfo(),
-          this.fetchUserCarDetail()
-        ]).then(() => {
-          console.log('数据获取完成，userCarDetail:', this.userCarDetail);
-          this.loading = false;
-        }).catch(error => {
-          console.error('获取数据失败:', error);
-          this.loading = false;
-        });
-      },
-    fetchUserInfo() {
-      return axios.post('http://localhost:8000/myApp/get-user-info/', {
-        username: this.username
-      }).then(res => {
-        if (res.data.success) {
-          this.userInfo = res.data.userInfo;
-        } else {
-          console.error('获取用户信息失败:', res.data.message);
-        }
-      }).catch(error => {
-        console.error('请求用户信息失败:', error);
-      });
-    },
-    fetchCarInfo() {
-      return axios.post('http://localhost:8000/myApp/get-car-info/', {
-        username: this.username
-      }).then(res => {
-        if (res.data.success) {
-          this.carInfo = res.data.carInfo;
-
-        } else {
-          console.error('获取车辆信息失败:', res.data.message);
-        }
-      }).catch(error => {
-        console.error('请求车辆信息失败:', error);
-      });
-    },
-    fetchUserCarDetail() {
-      return axios
-        .post('http://localhost:8000/myApp/get-user-car-detail/', {
-          username: this.username
-        })
+      if (!this.username) {
+        this.loading = false;
+        return;
+      }
+      axios.post('http://localhost:8000/myApp/entry-user-info/', { username: this.username })
         .then(res => {
-          console.log('【2】接口返回：', res.data);
-          if (res.data.success) {
-            this.userCarDetail = res.data.userCarDetail;
-            console.log('【3】已写入 this.userCarDetail', this.userCarDetail);
-          } else {
-            console.error('获取用户车辆详情失败：', res.data.message);
+          if (res.data && res.data.success) {
+            this.userInfo = res.data.userinfo || null;
+            this.userCarDetail = res.data.usercarinfo || null;
+            this.carInfo = res.data.data || null;
           }
         })
         .catch(err => {
-          console.error('请求用户车辆详情失败：', err);
+          console.error('统一获取用户数据失败:', err);
+        })
+        .finally(() => {
+          this.loading = false;
         });
     },
+    fetchUserInfo() { return Promise.resolve(); },
+    fetchCarInfo() { return Promise.resolve(); },
+    fetchUserCarDetail() { return Promise.resolve(); },
       goToHome() {
+        if (this.$route.path === '/') return;
         this.$router.push('/');
       }
   }

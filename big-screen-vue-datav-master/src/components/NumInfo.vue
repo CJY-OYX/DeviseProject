@@ -11,14 +11,14 @@ export default {
   props: {
     carInfo: {
       type: Object,
-      default: null
+      default: () => ({ newprice: [0, 0] })
     }
   },
   data() {
     return {
       sum: 0,
       config: {
-        number: [this.carInfo.newprice[0]],
+        number: [Number((this.carInfo && this.carInfo.newprice && this.carInfo.newprice[0]) || 0)],
         toFixed: 2,
         content: '{nt}万',
         style: {

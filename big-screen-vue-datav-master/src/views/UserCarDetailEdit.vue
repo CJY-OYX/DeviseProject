@@ -1,6 +1,6 @@
 <template>
   <div id="userCarDetailEdit" ref="appRef">
-    <div class="bg" style="background: url('/VCG41N1312873566.jpg') center/cover no-repeat;position: relative;">
+    <div class="bg themed-bg-edit">
       <dv-loading v-if="loading">Loading...</dv-loading>
       <div v-else class="host-body">
         <div class="d-flex jc-center">
@@ -26,10 +26,10 @@
         <!-- 第二行 -->
         <div class="d-flex jc-between px-2">
           <div class="d-flex aside-width">
-            <div class="react-left ml-4 react-l-s" :style="{ backgroundColor: isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
+            <div class="react-left ml-4 react-l-s" :class="isHomePage ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
               <span class="text" @click="goToHome">首页</span>
             </div>
-            <div class="react-left ml-3 react-l-s" :style="{ backgroundColor: !isHomePage ? '#9c27b0' : '#2196f3', display: 'flex', justifyContent: 'center', alignItems: 'center' }">
+            <div class="react-left ml-3 react-l-s" :class="(!isHomePage) ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
               <span class="text" @click="goToEdit">编辑</span>
             </div>
           </div>
@@ -104,6 +104,7 @@ export default {
       decorationColor: ['#568aea', '#000000'],
       isLoggedIn: true,
       username: localStorage.getItem('username') || '',
+      userId: null,
       isHomePage: false,
       carId: null,
       carName: '',
@@ -163,8 +164,8 @@ export default {
         return;
       }
 
-      // 发送请求到新的if-user-car-detail接口
-      axios.post('http://localhost:8000/myApp/if-user-car-detail/', {
+      // 请求用户车辆详情（与后端 urls.py 一致的下划线路径）
+      axios.post('http://localhost:8000/myApp/if_user_car_detail/', {
         username: username
       })
       .then(response => {
@@ -239,15 +240,14 @@ export default {
         return;
       }
 
-      if (!this.userId || !this.carId) {
-        alert('用户ID或车辆ID不存在，请重新登录');
+      if (!this.userId) {
+        alert('用户ID不存在，请重新登录');
         this.$router.push('/login');
         return;
       }
 
-      // 发送更新请求到后端API
-      axios.post('http://localhost:8000/myApp/save-user-car-detail/', {
-        carId: this.carId,
+      // 发送更新请求到后端API（与后端 urls.py 一致的下划线路径）
+      axios.post('http://localhost:8000/myApp/save_user_car_detail/', {
         userId: this.userId,
         carName: this.carName,
         carModel: this.carModel,

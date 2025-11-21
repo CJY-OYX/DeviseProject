@@ -327,9 +327,10 @@ class spider(object):
                 
                 print(f"已成功覆盖carInfo表，共插入{len(car_info_objects)}条数据")
             
-            # 处理AllCarInfo表（使用去重逻辑）
-            print("开始处理AllCarInfo表（去重逻辑）...")
+            # 处理AllCarInfo表（去重 + 更新/插入）
+            print("开始处理AllCarInfo表（去重 + 更新/插入）...")
             all_car_added_count = 0
+            all_car_updated_count = 0
             
             # 遍历数据，对每辆车应用去重逻辑
             for car in data:
@@ -343,26 +344,33 @@ class spider(object):
                     carName=car_name,
                     carModel=car_model
                 ).first()
-                
+
+                # 归一化 rank
+                rank_value = car[6]
+                try:
+                    if isinstance(rank_value, str) and '.' in rank_value:
+                        rank_value = rank_value.split('.')[0]
+                    elif isinstance(rank_value, float):
+                        rank_value = str(int(rank_value))
+                    rank_value = str(rank_value)
+                    int(rank_value)
+                except (ValueError, TypeError):
+                    rank_value = "0"
+
+                # 归一化 price（统一为无空格的字符串）
+                price_val = car[4]
+                if isinstance(price_val, (list, tuple)) and len(price_val) >= 2:
+                    price_str = f"[{str(price_val[0]).strip()},{str(price_val[1]).strip()}]"
+                else:
+                    price_str = str(price_val).replace(' ', '')
+
                 if not existing_car:
-                    # 创建AllCarInfo表对象（使用同样的rank处理逻辑）
-                    rank_value = car[6]
-                    try:
-                        if isinstance(rank_value, str) and '.' in rank_value:
-                            rank_value = rank_value.split('.')[0]
-                        elif isinstance(rank_value, float):
-                            rank_value = str(int(rank_value))
-                        rank_value = str(rank_value)
-                        int(rank_value)
-                    except (ValueError, TypeError):
-                        rank_value = "0"
-                    
                     new_all_car = AllCarInfo(
                         brand = car[0],
                         carName=car[1],
                         carImg=car[2],
                         saleVolume=car[3],
-                        price=car[4],
+                        price=price_str,
                         manufacturer=car[5],
                         rank=rank_value,
                         carModel=car[7],
@@ -372,8 +380,20 @@ class spider(object):
                     )
                     new_all_car.save()
                     all_car_added_count += 1
+                else:
+                    # 更新已有记录为最新数据（以 brand+carName+carModel 作为唯一键）
+                    existing_car.carImg = car[2]
+                    existing_car.saleVolume = car[3]
+                    existing_car.price = price_str
+                    existing_car.manufacturer = car[5]
+                    existing_car.rank = rank_value
+                    existing_car.energyType = car[8]
+                    existing_car.marketTime = car[9]
+                    existing_car.insure = car[10]
+                    existing_car.save()
+                    all_car_updated_count += 1
             
-            print(f"AllCarInfo表去重处理完成，新增{all_car_added_count}条数据")
+            print(f"AllCarInfo表处理完成，新增{all_car_added_count}条，更新{all_car_updated_count}条")
             
             # 在数据保存到数据库后，主动清空temp.csv文件
             current_dir = os.path.dirname(os.path.abspath(__file__))

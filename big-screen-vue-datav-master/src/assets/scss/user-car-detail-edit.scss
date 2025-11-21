@@ -42,6 +42,16 @@
     background-position: center center;
   }
 
+  .themed-bg-edit {
+    background-color: #0a0f1e;
+    background-image:
+      radial-gradient(1200px 600px at 20% 0%, rgba(255, 77, 141, 0.18) 0%, transparent 60%),
+      radial-gradient(1200px 600px at 80% 100%, rgba(122, 169, 255, 0.12) 0%, transparent 60%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 8px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 8px),
+      linear-gradient(180deg, #050810 0%, #0a0f1e 100%);
+  }
+
   .host-body {
     height: 100%;
     display: flex;
@@ -196,6 +206,32 @@
 .user-detail-form {
   width: 100%;
   padding: 30px;
+}
+
+.nav-active {
+  background-color: #00D1FF;
+  border: 1px solid #00D1FF;
+  box-shadow: 0 0 12px rgba(0, 209, 255, 0.45);
+  transform: skewX(45deg) scale(1.02);
+  position: relative;
+}
+.nav-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  box-shadow: 0 0 18px rgba(0, 209, 255, 0.55);
+  animation: activePulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+.nav-inactive {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+@keyframes activePulse {
+  0% { box-shadow: 0 0 0 rgba(0, 209, 255, 0); }
+  50% { box-shadow: 0 0 18px rgba(0, 209, 255, 0.55); }
+  100% { box-shadow: 0 0 0 rgba(0, 209, 255, 0); }
 }
 
 .form-group {

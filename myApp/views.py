@@ -303,9 +303,42 @@ def entry_user_info(request):
                 return JsonResponse({'success': False, 'message': '详情信息未填写，即将前往填写页'})
             
             # 查询车辆信息
-            car_data = carInfo.objects.filter(id=userCarDetail.car_id).values().first()
+            car_obj = carInfo.objects.filter(id=userCarDetail.car_id).first()
+            car_data = None
+            if car_obj:
+                try:
+                    s = str(car_obj.price).replace('[','').replace(']','').replace(' ','').split(',')
+                    newprice = []
+                    for i in s:
+                        newprice.append(float(i))
+                except Exception:
+                    newprice = []
+                car_data = {
+                    'id': car_obj.id,
+                    'brand': car_obj.brand,
+                    'carName': car_obj.carName,
+                    'carImg': car_obj.carImg,
+                    'saleVolume': car_obj.saleVolume,
+                    'price': car_obj.price,
+                    'manufacturer': car_obj.manufacturer,
+                    'rank': car_obj.rank,
+                    'carModel': car_obj.carModel,
+                    'energyType': car_obj.energyType,
+                    'marketTime': car_obj.marketTime,
+                    'insure': car_obj.insure,
+                    'newprice': newprice
+                }
 
             usercardetail = UserCarDetail.objects.filter(user_id=userid).values().first()
+            if usercardetail is not None:
+                # 附加价格区间
+                price_range = []
+                if car_obj and car_obj.price:
+                    try:
+                        price_range = [float(x) for x in str(car_obj.price).strip('[]').split(',')]
+                    except Exception:
+                        price_range = []
+                usercardetail['priceRange'] = price_range
             
             # 准备返回数据
             userinfo = {

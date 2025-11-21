@@ -3,7 +3,13 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: url('/register-bg-car.png') center/cover no-repeat;
+  background-color: #0a0f1e;
+  background-image:
+    radial-gradient(1200px 600px at 20% 0%, rgba(0, 209, 255, 0.12) 0%, transparent 60%),
+    radial-gradient(1200px 600px at 80% 100%, rgba(122, 169, 255, 0.12) 0%, transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 8px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 8px),
+    linear-gradient(180deg, #050810 0%, #0a0f1e 100%);
   align-items: center;
   justify-content: center;
 }
@@ -19,6 +25,12 @@
   padding: 30px;
   width: 100%;
   box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .form-title {
@@ -43,34 +55,36 @@ label {
 input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #bdd7e7;
-  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
   font-size: 16px;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.08);
   transition: border-color 0.3s;
+  color: #eaf7ff;
 }
 
 input:focus {
-  border-color: #3498db;
+  border-color: #00D1FF;
   outline: none;
 }
 
 .register-btn {
   width: 100%;
   padding: 12px;
-  background-color: #3498db;
+  background-color: #00D1FF;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 12px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s;
+  box-shadow: 0 0 12px rgba(0, 209, 255, 0.35);
   margin-bottom: 20px;
 }
 
 .register-btn:hover {
-  background-color: #2980b9;
+  background-color: #12e6ff;
 }
 
 .form-footer {
@@ -80,11 +94,13 @@ input:focus {
 }
 
 .form-footer a {
+  color: #eaf7ff;
   text-decoration: none;
   transition: color 0.3s;
 }
 
 .form-footer a:hover {
+  color: #00D1FF;
   text-decoration: underline;
 }
 

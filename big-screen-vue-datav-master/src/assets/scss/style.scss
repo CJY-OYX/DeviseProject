@@ -185,6 +185,82 @@ a {
   }
 }
 
+// 动效工具类
+.fade-in {
+  animation: fadeIn 0.6s ease-out both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hover-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -150%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0) 100%);
+  animation: shimmerMove 1.8s ease-in-out infinite;
+}
+
+@keyframes shimmerMove {
+  0% { left: -150%; }
+  60% { left: 150%; }
+  100% { left: 150%; }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2.2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 rgba(0, 209, 255, 0); }
+  50% { box-shadow: 0 0 12px rgba(0, 209, 255, 0.35); }
+  100% { box-shadow: 0 0 0 rgba(0, 209, 255, 0); }
+}
+
+.glass-card {
+  background: map-get($colors, 'glass');
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.gradient-bg {
+  background-image: radial-gradient(1200px 600px at 20% 0%, map-get($colors, 'gradient-start') 0%, transparent 60%),
+    radial-gradient(1200px 600px at 80% 100%, map-get($colors, 'gradient-end') 0%, transparent 60%),
+    linear-gradient(180deg, #050810 0%, #0a0f1e 100%);
+}
+
 // 自定义弹窗样式
 .custom-modal-container {
   position: fixed;
