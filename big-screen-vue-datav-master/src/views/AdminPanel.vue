@@ -92,6 +92,22 @@
                   <p>自动更新服务会每5分钟检查一次排行榜数据变化，并自动更新数据库。</p>
                   <p>日志文件路径: spiderMan/auto_update_logs.txt</p>
                 </div>
+                <div class="progress-logs" style="margin-top: 12px;">
+                  <h4>进度日志</h4>
+                  <div class="logs-container">
+                    <template v-if="isUpdating">
+                      <div class="log-item" v-for="(log, index) in crawlerLogs" :key="'m-' + index">{{ log }}</div>
+                      <div v-if="crawlerLogs.length === 0" class="no-logs">等待爬取日志输出...</div>
+                    </template>
+                    <template v-else-if="autoUpdateStatus.isRunning">
+                      <div class="log-item" v-for="(log, index) in autoLogs" :key="'a-' + index">{{ log }}</div>
+                      <div v-if="autoLogs.length === 0" class="no-logs">正在运行，暂无日志</div>
+                    </template>
+                    <template v-else>
+                      <div class="no-logs">当前没有更新任务</div>
+                    </template>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -243,9 +259,8 @@
 
 <script>
 import drawMixin from "../utils/drawMixin";
-import { getAdminDashboardData, getUsersList, searchUsers, addUser, deleteUser, updateUser, getUserStats, getCarInfoList, getUserCarDetails, getCarDataStats, updateUserCarDetail, startAutoUpdateService, stopAutoUpdateService, checkAutoUpdateServiceStatus, executeDataUpdate, searchCarInfo, getCrawlerLogs } from '../api/adminApi.js';
+import { getAdminDashboardData, getUsersList, searchUsers, addUser, deleteUser, updateUser, getUserStats, getCarInfoList, getUserCarDetails, getCarDataStats, updateUserCarDetail, startAutoUpdateService, stopAutoUpdateService, checkAutoUpdateServiceStatus, executeDataUpdate, searchCarInfo, getCrawlerLogs, getAutoUpdateLogs } from '../api/adminApi.js';
 import { showPrompt } from '../utils/index.js';
-import axios from 'axios';
 
 export default {
   mixins: [drawMixin],
@@ -279,7 +294,9 @@ export default {
         pid: null,
         lastChecked: null
       },
-      logPollingInterval: null
+      logPollingInterval: null,
+      autoLogPollingInterval: null,
+      autoLogs: []
     }
   },
   methods: {
@@ -569,11 +586,11 @@ export default {
     // 获取爬虫日志
     async fetchCrawlerLogs() {
       try {
-        const response = await axios.get('/api/getCrawlerLogs/');
-        if (response.data && response.data.success) {
-          this.crawlerLogs = response.data.logs || [];
+        const response = await getCrawlerLogs();
+        if (response && response.success) {
+          this.crawlerLogs = response.logs || [];
         } else {
-          console.error('获取爬虫日志失败:', response.data?.message || '未知错误');
+          console.error('获取爬虫日志失败:', response?.message || '未知错误');
           this.crawlerLogs = [];
         }
       } catch (error) {
@@ -590,6 +607,12 @@ export default {
           this.autoUpdateStatus.isRunning = response.is_running;
           this.autoUpdateStatus.pid = response.pid;
           this.autoUpdateStatus.lastChecked = new Date().toLocaleString();
+          if (this.autoUpdateStatus.isRunning && !this.autoLogPollingInterval) {
+            this.startAutoLogPolling();
+          }
+          if (!this.autoUpdateStatus.isRunning) {
+            this.stopAutoLogPolling();
+          }
         } else {
           console.error('检查自动更新服务状态失败:', response?.message || '未知错误');
           alert('检查服务状态失败: ' + (response?.message || '未知错误'));
@@ -597,6 +620,25 @@ export default {
       } catch (error) {
         console.error('检查自动更新服务状态时发生错误:', error);
         alert('检查服务状态时发生错误，请稍后重试');
+      }
+    },
+    startAutoLogPolling() {
+      this.stopAutoLogPolling();
+      this.autoLogPollingInterval = setInterval(async () => {
+        try {
+          const res = await getAutoUpdateLogs();
+          if (res && res.success) {
+            this.autoLogs = res.logs || [];
+          }
+        } catch (e) {
+          console.error('获取自动更新日志失败:', e);
+        }
+      }, 2000);
+    },
+    stopAutoLogPolling() {
+      if (this.autoLogPollingInterval) {
+        clearInterval(this.autoLogPollingInterval);
+        this.autoLogPollingInterval = null;
       }
     },
     
@@ -609,6 +651,7 @@ export default {
           alert('自动更新服务已成功启动');
           // 重新检查状态
           await this.checkAutoUpdateStatus();
+          this.startAutoLogPolling();
         } else {
           console.error('启动自动更新服务失败:', response?.message || '未知错误');
           alert('启动服务失败: ' + (response?.message || '未知错误'));
@@ -634,6 +677,7 @@ export default {
           alert('自动更新服务已成功停止');
           // 重新检查状态
           await this.checkAutoUpdateStatus();
+          this.stopAutoLogPolling();
         } else {
           console.error('停止自动更新服务失败:', response?.message || '未知错误');
           alert('停止服务失败: ' + (response?.message || '未知错误'));

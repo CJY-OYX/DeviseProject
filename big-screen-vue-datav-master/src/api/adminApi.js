@@ -156,6 +156,17 @@ export const getCrawlerLogs = async () => {
   }
 }
 
+// 获取自动更新服务日志
+export const getAutoUpdateLogs = async () => {
+  try {
+    const response = await service.get('/myApp/getAutoUpdateLogs/')
+    return response.data
+  } catch (error) {
+    console.error('获取自动更新日志失败:', error)
+    throw error
+  }
+}
+
 // 启动自动更新服务
 export const startAutoUpdateService = async () => {
   try {

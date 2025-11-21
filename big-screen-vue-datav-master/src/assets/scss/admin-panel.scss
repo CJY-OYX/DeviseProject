@@ -407,6 +407,42 @@
     }
   }
 
+  // 进度日志统一样式
+  .progress-logs {
+    background-color: rgba(51, 65, 85, 0.5);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+
+    h4 {
+      color: #ffffff;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .logs-container {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .log-item {
+      padding: 8px 6px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      color: #e5e7eb;
+      font-size: 13px;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .no-logs {
+      color: #94a3b8;
+      font-style: italic;
+      padding: 12px 6px;
+    }
+  }
+
   // 用户信息列表样式
   .user-info-list {
     background-color: rgba(51, 65, 85, 0.5);

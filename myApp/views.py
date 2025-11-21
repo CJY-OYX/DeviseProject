@@ -1225,6 +1225,24 @@ def getCrawlerLogs(request):
         })
 
 
+# 获取自动更新服务日志
+@csrf_exempt
+def getAutoUpdateLogs(request):
+    if request.method == 'GET':
+        try:
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            log_file_path = os.path.join(project_root, 'spiderMan', 'auto_update_logs.txt')
+            if not os.path.exists(log_file_path):
+                return JsonResponse({'success': True, 'logs': []})
+            with open(log_file_path, 'r', encoding='utf-8') as f:
+                logs = [line.strip() for line in f.readlines()]
+            recent_logs = logs[-100:] if len(logs) > 100 else logs
+            return JsonResponse({'success': True, 'logs': recent_logs})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    else:
+        return JsonResponse({'success': False, 'message': '仅支持GET请求'})
+
 # 启动自动更新服务
 @csrf_exempt
 def startAutoUpdate(request):

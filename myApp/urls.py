@@ -19,6 +19,7 @@ urlpatterns = [
     path("getUpdateLogs/", views.getUpdateLogs, name="getUpdateLogs"),
     path("executeDataUpdate/", views.executeDataUpdate, name="executeDataUpdate"),
     path("getCrawlerLogs/", views.getCrawlerLogs, name="getCrawlerLogs"),
+    path("getAutoUpdateLogs/", views.getAutoUpdateLogs, name="getAutoUpdateLogs"),
     path("getAdminDashboardData/", views.getAdminDashboardData, name="getAdminDashboardData"),
     path("save_user_car_detail/", views.save_user_car_detail, name="save_user_car_detail"),
     path("if_user_car_detail/", views.if_user_car_detail, name="if_user_car_detail"),
