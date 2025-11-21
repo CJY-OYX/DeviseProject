@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="d-flex jc-center body-box">
-        <dv-scroll-board class="dv-scr-board" :config="config" v-bind:key="config.data[0][1]"/>
+        <dv-scroll-board class="dv-scr-board" :config="config" v-bind:key="config.data && config.data.length > 0 ? config.data[0][1] : 'default'"/>
       </div>
     </div>
   </div>

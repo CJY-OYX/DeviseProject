@@ -10,7 +10,7 @@ from .utils import getPublicData
 from .utils import getCenterData
 from .utils import getCenterLeftData
 from .utils import getBottomLeftData
-from .utils import getCenterRightData
+from .utils.getCenterRightData import getPriceSortData
 from .utils import getCenterChangeData
 from .utils import getBottomRightData
 import re
@@ -18,11 +18,30 @@ from django.db.models import Count, Avg, Q
 import subprocess
 import sys
 import os
+import psutil
 
 # Create your views here.
 
 # 全局变量用于存储爬虫进程
 crawler_process = None
+
+@csrf_exempt
+def login_view(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+            
+            # 验证用户名和密码
+            user = User.objects.filter(username=username, password=password).first()
+            if user:
+                return JsonResponse({'success': True, 'message': '登录成功'})
+            else:
+                return JsonResponse({'success': False, 'message': '用户名或密码错误'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': '仅支持POST请求'})
 def center(request):
     if request.method == 'GET':
         sumCar, highVolume, topCar, mostModel, mostBrand, averagePrice = getCenterData.getBaseData()
@@ -59,7 +78,7 @@ def bottomLeft(request):
 
 def centerRight(request):
     if request.method == 'GET':
-        realData = getCenterRightData.getPriceSortData()
+        realData = getPriceSortData()
         return JsonResponse({
             'realData': realData,
         })
@@ -229,6 +248,31 @@ def login(request):
                 return JsonResponse({'success': True, 'message': '登录成功','username': username})
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'登录失败: {str(e)}'})
+
+@csrf_exempt
+def user_info(request):
+    if request.method == 'GET':
+        return JsonResponse({'detail': 'send POST to get user info'})
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            user = User.objects.get(username=username)
+            
+            if user:
+                return JsonResponse({
+                    'success': True,
+                    'message': '获取用户信息成功',
+                    'userInfo': {
+                        'id': user.id,
+                        'username': user.username,
+                        'createTime': user.createTime.strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                })
+            else:
+                return JsonResponse({'success': False, 'message': '用户不存在'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
 
 @csrf_exempt
 def entry_user_info(request):
@@ -902,6 +946,51 @@ import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+import psutil
+
+# 检查自动更新服务状态
+@csrf_exempt
+def checkAutoUpdateStatus(request):
+    if request.method == 'GET':
+        try:
+            # 检查是否有auto_update.py进程在运行
+            auto_update_running = False
+            process_info = []
+            
+            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+                try:
+                    # 检查进程是否为Python并且命令行中包含auto_update.py
+                    if proc.info['name'].lower() == 'python.exe' and proc.info['cmdline']:
+                        cmdline = ' '.join(proc.info['cmdline'])
+                        if 'auto_update.py' in cmdline:
+                            auto_update_running = True
+                            process_info.append({
+                                'pid': proc.info['pid'],
+                                'cmdline': cmdline
+                            })
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
+            
+            # 检查日志文件是否存在
+            log_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'update.log')
+            log_exists = os.path.exists(log_file)
+            
+            return JsonResponse({
+                'success': True,
+                'status': 'running' if auto_update_running else 'stopped',
+                'processes': process_info,
+                'log_file_exists': log_exists
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    else:
+        return JsonResponse({
+            'success': False,
+            'error': '只支持GET请求'
+        }, status=400)
 
 # 执行数据更新
 @csrf_exempt
@@ -1007,7 +1096,7 @@ def executeDataUpdate(request):
                         try:
                             crawler_process.terminate()
                             # 等待进程终止，最多等待5秒
-                            crawler_process.wait(timeout=5)
+                            crawler_process.wait(timeout=35)
                             # 记录到日志文件
                             project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                             log_file_path = os.path.join(project_root, 'spiderMan', 'crawler_logs.txt')
@@ -1107,5 +1196,285 @@ def getCrawlerLogs(request):
             'success': False,
             'message': '仅支持GET请求'
         })
+
+
+# 启动自动更新服务
+@csrf_exempt
+def startAutoUpdate(request):
+    if request.method == 'POST':
+        try:
+            global auto_update_process
+            
+            # 如果已有进程在运行，先停止它
+            if 'auto_update_process' in globals() and auto_update_process and auto_update_process.poll() is None:
+                auto_update_process.terminate()
+                auto_update_process.wait(timeout=10)
+                
+            # 获取项目根目录
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            
+            # 设置环境变量
+            env = os.environ.copy()
+            env['PYTHONPATH'] = project_root
+            env['DJANGO_SETTINGS_MODULE'] = 'DeviseProject.settings'
+            
+            # 自动更新脚本路径
+            auto_update_script = os.path.join(project_root, 'spiderMan', 'auto_update.py')
+            
+            # 启动自动更新进程
+            process = subprocess.Popen(
+                [sys.executable, auto_update_script],
+                env=env,
+                cwd=project_root,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            
+            # 保存进程引用
+            auto_update_process = process
+            
+            # 创建线程读取输出并写入日志
+            def read_output(process):
+                log_file_path = os.path.join(project_root, 'spiderMan', 'auto_update_logs.txt')
+                with open(log_file_path, 'a', encoding='utf-8') as f:
+                    f.write(f"[{datetime.now()}] 自动更新服务启动 (PID: {process.pid})\n")
+                    f.flush()
+                    
+                    while True:
+                        output = process.stdout.readline()
+                        if output == '' and process.poll() is not None:
+                            break
+                        if output:
+                            f.write(f"[{datetime.now()}] [输出] {output.strip()}\n")
+                            f.flush()
+                    
+                    # 读取错误输出
+                    error_output = process.stderr.read()
+                    if error_output:
+                        f.write(f"[{datetime.now()}] [错误] {error_output.strip()}\n")
+                        f.flush()
+                    
+                    # 记录进程结束信息
+                    exit_code = process.returncode
+                    status = "正常结束" if exit_code == 0 else f"异常结束 (退出码: {exit_code})"
+                    f.write(f"[{datetime.now()}] 自动更新服务{status}\n")
+                    f.flush()
+            
+            # 启动日志记录线程
+            import threading
+            from datetime import datetime
+            log_thread = threading.Thread(target=read_output, args=(process,))
+            log_thread.daemon = True
+            log_thread.start()
+            
+            return JsonResponse({
+                'success': True,
+                'message': '自动更新服务已启动，每5分钟检查一次排行榜变化'
+            })
+            
+        except Exception as e:
+            error_msg = f"启动自动更新服务失败: {str(e)}"
+            print(error_msg)
+            return JsonResponse({
+                'success': False,
+                'message': error_msg
+            })
+    else:
+        return JsonResponse({
+            'success': False,
+            'message': '仅支持POST请求'
+        })
+
+
+
+
+# 停止自动更新服务
+@csrf_exempt
+def stopAutoUpdate(request):
+    if request.method == 'POST':
+        try:
+            global auto_update_process
+            
+            if 'auto_update_process' in globals() and auto_update_process and auto_update_process.poll() is None:
+                auto_update_process.terminate()
+                auto_update_process.wait(timeout=30)
+                
+                # 记录到日志文件
+                project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                log_file_path = os.path.join(project_root, 'spiderMan', 'auto_update_logs.txt')
+                with open(log_file_path, 'a', encoding='utf-8') as f:
+                    f.write(f"[{datetime.datetime.now()}] [用户操作] 自动更新服务已被手动停止\n")
+                    f.flush()
+                
+                auto_update_process = None
+                return JsonResponse({
+                    'success': True,
+                    'message': '自动更新服务已停止'
+                })
+            else:
+                return JsonResponse({
+                    'success': True,
+                    'message': '没有正在运行的自动更新服务'
+                })
+                
+        except Exception as e:
+            error_msg = f"停止自动更新服务失败: {str(e)}"
+            print(error_msg)
+            return JsonResponse({
+                'success': False,
+                'message': error_msg
+            })
+    else:
+        return JsonResponse({
+            'success': False,
+            'message': '仅支持POST请求'
+        })
+
+# 检查自动更新服务状态
+@csrf_exempt
+def checkAutoUpdateStatus(request):
+    if request.method == 'GET':
+        try:
+            # 同时检查全局变量和系统进程，确保状态准确性
+            global auto_update_process
+            is_running = False
+            pid = None
+            
+            # 先检查全局变量
+            if 'auto_update_process' in globals() and auto_update_process and auto_update_process.poll() is None:
+                is_running = True
+                pid = auto_update_process.pid
+            else:
+                # 如果全局变量显示未运行，再通过psutil检查系统中是否有实际运行的auto_update.py进程
+                for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+                    try:
+                        if proc.info['name'].lower() == 'python.exe' and proc.info['cmdline']:
+                            cmdline = ' '.join(proc.info['cmdline'])
+                            if 'auto_update.py' in cmdline:
+                                is_running = True
+                                pid = proc.info['pid']
+                                break
+                    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                        pass
+            
+            return JsonResponse({
+                'success': True,
+                'is_running': is_running,
+                'pid': pid,
+                'message': '服务正在运行' if is_running else '服务未运行'
+            })
+        except Exception as e:
+            error_msg = f"检查自动更新服务状态失败: {str(e)}"
+            print(error_msg)
+            return JsonResponse({
+                'success': False,
+                'message': error_msg
+            })
+    else:
+        return JsonResponse({
+            'success': False,
+            'message': '仅支持GET请求'
+        })
+
+
+
+def updateCarInfo(request):
+    """
+    更新汽车信息
+    """
+    if request.method == 'POST':
+        try:
+            # 这里可以添加权限验证逻辑
+            # 例如: if not request.user.is_staff: return JsonResponse({'code': 403, 'msg': '无权限操作'})
+            
+            # 执行数据更新逻辑
+            # 这里假设有一个执行数据更新的函数
+            from spiderMan.spiders import main as update_data
+            update_data()
+            
+            return JsonResponse({
+                'code': 200,
+                'msg': '汽车信息更新成功',
+                'data': None
+            })
+        except Exception as e:
+            return JsonResponse({
+                'code': 500,
+                'msg': f'更新失败: {str(e)}',
+                'data': None
+            })
+    else:
+        return JsonResponse({
+            'code': 405,
+            'msg': '仅支持POST请求',
+            'data': None
+        })
+
+
+def searchUsers(request):
+    """
+    搜索用户功能
+    支持按用户名、邮箱或手机号搜索
+    """
+    if request.method == 'GET':
+        query = request.GET.get('q', '').strip()
+        
+        if not query:
+            return JsonResponse({
+                'code': 400,
+                'msg': '搜索关键词不能为空',
+                'data': []
+            })
+        
+        # 搜索用户（按用户名、邮箱、手机号）
+        users = User.objects.filter(
+            Q(username__icontains=query) |
+            Q(email__icontains=query) |
+            Q(phone__icontains=query)  # 假设有phone字段
+        ).values('id', 'username', 'email', 'phone', 'date_joined')
+        
+        user_list = list(users)
+        
+        return JsonResponse({
+            'code': 200,
+            'msg': f'找到 {len(user_list)} 个用户',
+            'data': user_list
+        })
+    else:
+        return JsonResponse({
+            'code': 405,
+            'msg': '仅支持GET请求',
+            'data': None
+        })
+
+
+def admin_panel(request):
+    """
+    管理员面板视图函数
+    """
+    # 这里可以添加管理员权限验证逻辑
+    # 例如: if not request.user.is_staff: return redirect('login')
+    
+    # 获取一些统计数据用于展示
+    total_cars = carInfo.objects.count()
+    total_users = User.objects.count()
+    
+    context = {
+        'total_cars': total_cars,
+        'total_users': total_users,
+    }
+    
+    # 如果是AJAX请求，返回JSON数据
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'code': 200,
+            'msg': '成功获取管理员面板数据',
+            'data': context
+        })
+    
+    # 否则渲染HTML模板
+    # 注意: 你需要创建对应的HTML模板文件
+    return render(request, 'admin_panel.html', context)
 
 

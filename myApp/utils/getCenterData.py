@@ -64,6 +64,11 @@ def getRollData():
 
 def getTypeRate():
     cars = list(getAllCars())
+    # 使用实际的车辆总数，而不是硬编码的636
+    sumCar = len(cars)
+    if sumCar == 0:
+        return 0.0, 0.0, 0.0
+    
     # 能源类型
     carTypes = {}
     for i in cars:
@@ -71,7 +76,14 @@ def getTypeRate():
             carTypes[str(i.energyType)] = 1
         else:
             carTypes[str(i.energyType)] += 1
-    oilRate = round(carTypes['汽油'] / 636 * 100, 2)
-    electricRare = round(carTypes['纯电动'] / 636 * 100, 2)
-    mixRate = round(((636 - carTypes['汽油'] - carTypes['纯电动']) / 636 * 100), 2)
+    
+    # 使用实际总数计算比例，并处理可能的键缺失情况
+    oil_count = carTypes.get('汽油', 0)
+    electric_count = carTypes.get('纯电动', 0)
+    
+    oilRate = round(oil_count / sumCar * 100, 2)
+    electricRare = round(electric_count / sumCar * 100, 2)
+    # 混合类型包括所有既不是汽油也不是纯电动的车型
+    mixRate = round(((sumCar - oil_count - electric_count) / sumCar * 100), 2)
+    
     return oilRate, electricRare, mixRate

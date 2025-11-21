@@ -23,7 +23,7 @@
             <div>保修时间</div>
             <div>上市时间</div>
           </li>
-          <li v-for="car in carData" v-bind:key="car.rank">
+          <li v-for="(car, index) in carData" v-bind:key="index + '-' + car.rank">
             <div>{{ car.rank }}</div>
             <div class="list_img"><img :src="car.carImg" style="height: 100%;width: 100%" alt=""></div>
             <div class="list_info">

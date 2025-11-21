@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import requests,csv,time,json,re,pandas as pd,random
 from lxml import etree
+import django
 
 # 尝试设置Django环境，如果失败则跳过数据库操作
 try:
@@ -25,25 +26,37 @@ class spider(object):
         self.spiderUrl = 'https://www.dongchedi.com/motor/pc/car/rank_data?aid=1839&app_name=auto_web_pc&city_name=%E6%9D%AD%E5%B7%9E&count=10&month=&new_energy_type=&rank_data_type=11&brand_id=&price=&manufacturer=&series_type=&nation=0'
         self.headers = { 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0' }
     def init(self):
-        if not os.path.exists('./temp.csv'):
-            with open('./temp.csv', 'a', newline='', encoding='utf-8') as wf:
+        # 使用绝对路径指向spiderMan目录下的temp.csv
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        temp_csv_path = os.path.join(current_dir, 'temp.csv')
+        
+        if not os.path.exists(temp_csv_path):
+            with open(temp_csv_path, 'a', newline='', encoding='utf-8') as wf:
                 write = csv.writer(wf)
                 write.writerow(["brand", "carName", "carImg", "saleVolume", "price", "manufacturer", "rank", "carModel", "energyType",
                                 "marketTime", "insure"])
     def get_page(self):
+        # 使用绝对路径指向spiderPage.txt
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        page_file_path = os.path.join(current_dir, 'spiderPage.txt')
+        
         try:
-            with open('./spiderPage.txt','r') as r_f:
+            with open(page_file_path, 'r') as r_f:
                 lines = r_f.readlines()
                 if not lines:
                     return '0'
                 return lines[-1].strip()
         except FileNotFoundError:
-            with open('./spiderPage.txt','w') as w_f:
+            with open(page_file_path, 'w') as w_f:
                 w_f.write('')
             return '0'
 
     def set_page(self,newPage):
-        with open('./spiderPage.txt','a') as a_f:
+        # 使用绝对路径指向spiderPage.txt
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        page_file_path = os.path.join(current_dir, 'spiderPage.txt')
+        
+        with open(page_file_path, 'a') as a_f:
             a_f.write('\n'+str(newPage))
 
     def main(self):
@@ -90,8 +103,20 @@ class spider(object):
                     carData.append(price)
                     # 厂商
                     carData.append(car['sub_brand_name'])
-                    # 销量排名
-                    carData.append(car['rank'])
+                    # 销量排名 - 强制转换为整数后再转为字符串，确保没有小数点
+                    try:
+                        # 直接处理原始rank值
+                        rank_str = str(car['rank'])
+                        # 移除可能的小数点和小数部分
+                        if '.' in rank_str:
+                            rank_str = rank_str.split('.')[0]
+                        # 转换为整数后再转为字符串
+                        rank_value = int(rank_str)
+                        carData.append(str(rank_value))
+                    except (ValueError, TypeError):
+                        # 如果转换失败，记录错误并使用默认值
+                        print(f"警告: 无法将rank值 '{car['rank']}' 转换为整数")
+                        carData.append("0")  # 使用默认值0
                     # 第二个页面
                     carNumber = car['series_id']
 
@@ -160,91 +185,205 @@ class spider(object):
             time.sleep(sleep_time)
 
     def save_to_csv(self, resultData):
-        with open('./temp.csv', 'a', newline='', encoding='utf-8') as f:
+        # 使用绝对路径指向spiderMan目录下的temp.csv
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        temp_csv_path = os.path.join(current_dir, 'temp.csv')
+        
+        with open(temp_csv_path, 'a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(resultData)
 
     def clear_csv(self):
-        df = pd.read_csv('./temp.csv')
+        # 使用绝对路径指向spiderMan目录下的temp.csv
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        temp_csv_path = os.path.join(current_dir, 'temp.csv')
+        
+        df = pd.read_csv(temp_csv_path)
         df.dropna(inplace=True)
         df.drop_duplicates(inplace=True)
         print("总数量为%d"%df.shape[0])
         return df.values
 
     def save_to_sql(self):
+        """保存数据到数据库，添加事务处理和分批插入"""
         if not DJANGO_AVAILABLE:
             print("Django不可用，跳过数据库保存")
             return
             
-        data = self.clear_csv()
-
-        print("清空carInfo表数据...")
-        carInfo.objects.all().delete()
-        
-        print("开始保存数据到数据库...")
-        # 批量创建对象列表
-        car_info_objects = []
-        all_car_info_objects = []
-        
-        for car in data:
-            # 创建carInfo表对象
-            car_info_objects.append(
-                carInfo(
-                    brand = car[0],
-                    carName=car[1],
-                    carImg=car[2],
-                    saleVolume=car[3],
-                    price=car[4],
-                    manufacturer=car[5],
-                    rank=car[6],
-                    carModel=car[7],
-                    energyType=car[8],
-                    marketTime=car[9],
-                    insure=car[10]
-                )
-            )
+        try:
+            # 导入Django事务和连接
+            from django.db import transaction, connection
             
-            # 为AllCarInfo表创建对象（将批量插入，实现追加功能）
-            all_car_info_objects.append(
-                AllCarInfo(
-                    brand = car[0],
-                    carName=car[1],
-                    carImg=car[2],
-                    saleVolume=car[3],
-                    price=car[4],
-                    manufacturer=car[5],
-                    rank=car[6],
-                    carModel=car[7],
-                    energyType=car[8],
-                    marketTime=car[9],
-                    insure=car[10]
+            # 确保使用新的数据库连接
+            print("确保数据库连接有效...")
+            connection.close()  # 关闭可能过期的连接
+            
+            data = self.clear_csv()
+            print(f"准备处理{len(data)}条数据")
+            
+            # 批量创建对象列表
+            car_info_objects = []
+            # 根据之前的去重策略，AllCarInfo表不再使用批量追加，而是检查后插入
+            
+            # 先处理数据，准备对象列表
+            for i, car in enumerate(data):
+                # 检查并修复rank字段格式
+                rank_value = car[6]
+                print(f"处理第{i+1}条数据 - 原始rank值: {rank_value}, 类型: {type(rank_value).__name__}")
+                
+                # 确保rank是纯整数字符串
+                try:
+                    # 如果是浮点数格式的字符串，转换为整数
+                    if isinstance(rank_value, str) and '.' in rank_value:
+                        rank_value = rank_value.split('.')[0]
+                    # 如果是浮点数，转换为整数
+                    elif isinstance(rank_value, float):
+                        rank_value = str(int(rank_value))
+                    # 转换为字符串
+                    rank_value = str(rank_value)
+                    # 确保是数字字符串
+                    int(rank_value)  # 验证可以转换为整数
+                    print(f"处理后rank值: {rank_value}, 类型: {type(rank_value).__name__}")
+                except (ValueError, TypeError):
+                    print(f"警告: rank值 '{rank_value}' 无效，使用默认值'0'")
+                    rank_value = "0"
+                
+                # 创建carInfo表对象
+                car_info_objects.append(
+                    carInfo(
+                        brand = car[0],
+                        carName=car[1],
+                        carImg=car[2],
+                        saleVolume=car[3],
+                        price=car[4],
+                        manufacturer=car[5],
+                        rank=rank_value,
+                        carModel=car[7],
+                        energyType=car[8],
+                        marketTime=car[9],
+                        insure=car[10]
+                    )
                 )
-            )
-        
-        # 批量插入carInfo表（覆盖操作）
-        carInfo.objects.bulk_create(car_info_objects)
-        print(f"已成功覆盖carInfo表，共插入{len(car_info_objects)}条数据")
-        
-        # 批量插入AllCarInfo表（追加操作）
-        AllCarInfo.objects.bulk_create(all_car_info_objects)
-        print(f"已成功追加数据到AllCarInfo表，共插入{len(all_car_info_objects)}条数据")
+            
+            # 使用事务处理carInfo表的清空和插入操作
+            print("开始数据库事务操作...")
+            with transaction.atomic():
+                print("清空carInfo表数据...")
+                # 使用DELETE语句直接清空，避免加载所有对象到内存
+                carInfo.objects.all().delete()
+                
+                # 分批插入数据，每批50条，避免内存占用过大
+                batch_size = 50
+                for i in range(0, len(car_info_objects), batch_size):
+                    batch_end = min(i + batch_size, len(car_info_objects))
+                    batch = car_info_objects[i:batch_end]
+                    carInfo.objects.bulk_create(batch)
+                    print(f"已插入carInfo表第{i//batch_size + 1}批数据，共{len(batch)}条")
+                
+                print(f"已成功覆盖carInfo表，共插入{len(car_info_objects)}条数据")
+            
+            # 处理AllCarInfo表（使用去重逻辑）
+            print("开始处理AllCarInfo表（去重逻辑）...")
+            all_car_added_count = 0
+            
+            # 遍历数据，对每辆车应用去重逻辑
+            for car in data:
+                brand = car[0]
+                car_name = car[1]
+                car_model = car[7]
+                
+                # 检查是否已存在
+                existing_car = AllCarInfo.objects.filter(
+                    brand=brand,
+                    carName=car_name,
+                    carModel=car_model
+                ).first()
+                
+                if not existing_car:
+                    # 创建AllCarInfo表对象（使用同样的rank处理逻辑）
+                    rank_value = car[6]
+                    try:
+                        if isinstance(rank_value, str) and '.' in rank_value:
+                            rank_value = rank_value.split('.')[0]
+                        elif isinstance(rank_value, float):
+                            rank_value = str(int(rank_value))
+                        rank_value = str(rank_value)
+                        int(rank_value)
+                    except (ValueError, TypeError):
+                        rank_value = "0"
+                    
+                    new_all_car = AllCarInfo(
+                        brand = car[0],
+                        carName=car[1],
+                        carImg=car[2],
+                        saleVolume=car[3],
+                        price=car[4],
+                        manufacturer=car[5],
+                        rank=rank_value,
+                        carModel=car[7],
+                        energyType=car[8],
+                        marketTime=car[9],
+                        insure=car[10]
+                    )
+                    new_all_car.save()
+                    all_car_added_count += 1
+            
+            print(f"AllCarInfo表去重处理完成，新增{all_car_added_count}条数据")
+            
+            # 在数据保存到数据库后，主动清空temp.csv文件
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            temp_csv_path = os.path.join(current_dir, 'temp.csv')
+            
+            with open(temp_csv_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                writer.writerow(["brand", "carName", "carImg", "saleVolume", "price", "manufacturer", "rank", "carModel", "energyType",
+                                "marketTime", "insure"])
+            print(f"数据保存完成后，已主动清空temp.csv文件: {temp_csv_path}")
+            
+        except django.db.utils.OperationalError as e:
+            print(f"数据库操作错误: {e}")
+            if 'Server has gone away' in str(e) or 'Lost connection' in str(e):
+                print("数据库连接断开，请检查数据库服务是否正常运行")
+            raise
+        except Exception as e:
+            print(f"保存数据到数据库时出错: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
 
 if __name__ == '__main__':
-    # 清空spiderPage.txt文件内容
-    with open('./spiderPage.txt', 'w', encoding='utf-8') as f:
-        f.write('')
-    print("已清空spiderPage.txt文件内容")
-    
-    # 创建爬虫对象
-    spiderObj = spider()
-    
-    # 初始化CSV文件
-    spiderObj.init()
-    
-    # 开始爬取数据
-    print("开始爬取数据...")
-    spiderObj.main()
-    
-    # 爬取完成后，将数据保存到数据库
-    spiderObj.save_to_sql()
-    print("数据保存操作已完成！")
+    try:
+        # 清空spiderPage.txt文件内容 - 使用绝对路径
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        page_file_path = os.path.join(current_dir, 'spiderPage.txt')
+        
+        with open(page_file_path, 'w', encoding='utf-8') as f:
+            f.write('')
+        print(f"已清空spiderPage.txt文件内容: {page_file_path}")
+        
+        # 清空temp.csv文件内容 - 使用绝对路径
+        temp_csv_path = os.path.join(current_dir, 'temp.csv')
+        
+        with open(temp_csv_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(["brand", "carName", "carImg", "saleVolume", "price", "manufacturer", "rank", "carModel", "energyType",
+                            "marketTime", "insure"])
+        print(f"已清空temp.csv文件内容: {temp_csv_path}")
+        
+        # 创建爬虫对象
+        spiderObj = spider()
+        
+        # 初始化CSV文件
+        spiderObj.init()
+        
+        # 开始爬取数据
+        print("开始爬取数据...")
+        spiderObj.main()
+        
+        # 爬取完成后，将数据保存到数据库
+        spiderObj.save_to_sql()
+        print("数据保存操作已完成！")
+    except Exception as e:
+        print(f"执行过程中出错: {e}")
+        import traceback
+        traceback.print_exc()

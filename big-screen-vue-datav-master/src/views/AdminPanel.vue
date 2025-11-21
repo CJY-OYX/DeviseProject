@@ -22,11 +22,73 @@
           >
             {{ item.name }}
           </button>
+          <button 
+            class="nav-btn"
+            :class="{ active: activeModule === 'autoUpdateControl' }"
+            @click="switchModule('autoUpdateControl')"
+          >
+            自动更新控制
+          </button>
           <button class="nav-btn logout-btn" @click="logout">退出登录</button>
         </div>
 
         <!-- 内容区域 -->
         <div class="body-box">
+          <!-- 自动更新控制模块 -->
+          <div v-if="activeModule === 'autoUpdateControl'" class="admin-module">
+            <h2>自动更新服务控制</h2>
+            <div class="module-content">
+              <div class="update-status-section">
+                <div class="status-indicator">
+                  <span class="status-label">服务状态:</span>
+                  <span :class="['status-value', autoUpdateStatus.isRunning ? 'status-running' : 'status-stopped']">
+                    {{ autoUpdateStatus.isRunning ? '运行中' : '已停止' }}
+                  </span>
+                </div>
+                
+                <div class="status-details" v-if="autoUpdateStatus.isRunning">
+                  <p>进程ID: {{ autoUpdateStatus.pid }}</p>
+                </div>
+                
+                <div class="status-timestamp">
+                  <p>最后检查时间: {{ autoUpdateStatus.lastChecked || '未检查' }}</p>
+                </div>
+                
+                <div class="control-buttons">
+                  <button 
+                    class="control-btn check-btn" 
+                    @click="checkAutoUpdateStatus"
+                    :disabled="loading"
+                  >
+                    检查状态
+                  </button>
+                  
+                  <button 
+                    class="control-btn start-btn" 
+                    @click="startAutoUpdateService"
+                    :disabled="loading || autoUpdateStatus.isRunning"
+                  >
+                    启动服务
+                  </button>
+                  
+                  <button 
+                    class="control-btn stop-btn" 
+                    @click="stopAutoUpdateService"
+                    :disabled="loading || !autoUpdateStatus.isRunning"
+                  >
+                    停止服务
+                  </button>
+                </div>
+                
+                <div class="update-info">
+                  <h3>服务信息</h3>
+                  <p>自动更新服务会每5分钟检查一次排行榜数据变化，并自动更新数据库。</p>
+                  <p>日志文件路径: spiderMan/auto_update_logs.txt</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <!-- 用户管理模块 -->
           <div v-if="activeModule === 'userManagement'" class="admin-module">
             <h2>用户管理</h2>
@@ -176,11 +238,11 @@
               </div>
               
               <div class="update-buttons">
-                <button class="start-btn" @click="startDataUpdate" :disabled="isUpdating">
-                  {{ isUpdating ? '更新中...' : '开始更新' }}
+                <button class="start-btn" @click="startAutoUpdateService" :disabled="isUpdating">
+                  {{ isUpdating ? '更新中...' : '启动自动更新' }}
                 </button>
-                <button class="stop-btn" @click="stopDataUpdate" :disabled="!isUpdating">
-                  停止更新
+                <button class="stop-btn" @click="stopAutoUpdateService" :disabled="!isUpdating">
+                  停止自动更新
                 </button>
                 <button class="refresh-btn" @click="refreshAllData">
                   刷新数据
@@ -222,22 +284,7 @@
 
 <script>
 import drawMixin from "../utils/drawMixin";
-import {
-  getAdminDashboardData,
-  getUsersList,
-  searchUsers,
-  addUser,
-  updateUser,
-  deleteUser,
-  getUserStats,
-  getUserCarDetails,
-  getCarInfoList,
-  searchCarInfo,
-  updateUserCarDetail,
-  getCarDataStats,
-  getUpdateLogs,
-  executeDataUpdate
-} from '../api/adminApi.js';
+import { getAdminDashboardData, getUsersList, searchUsers, addUser, deleteUser, updateUser, getUserStats, getCarInfoList, getUserCarDetails, getCarDataStats, updateUserCarDetail, startAutoUpdateService, stopAutoUpdateService, checkAutoUpdateServiceStatus, executeDataUpdate, searchCarInfo, getCrawlerLogs } from '../api/adminApi.js';
 import { showPrompt } from '../utils/index.js';
 import axios from 'axios';
 
@@ -267,6 +314,12 @@ export default {
       lastUpdateTime: '暂无记录',
       isUpdating: false,
       crawlerLogs: [],
+      // 自动更新服务状态
+      autoUpdateStatus: {
+        isRunning: false,
+        pid: null,
+        lastChecked: null
+      },
       logPollingInterval: null
     }
   },
@@ -469,7 +522,7 @@ export default {
     // 获取最后更新时间
     async fetchLastUpdateTime() {
       try {
-        const res = await getUpdateLogs();
+        const res = await getCrawlerLogs();
         if (res.success && res.logs && res.logs.length > 0) {
           this.lastUpdateTime = res.logs[0].updateTime || '暂无记录';
         }
@@ -510,6 +563,8 @@ export default {
         this.isUpdating = false;
       }
     },
+    
+    // 自动更新服务方法已在组件其他部分定义
     
     // 停止数据更新
     async stopDataUpdate() {
@@ -566,6 +621,71 @@ export default {
         this.crawlerLogs = [];
       }
     },
+    
+    // 检查自动更新服务状态
+    async checkAutoUpdateStatus() {
+      try {
+        const response = await checkAutoUpdateServiceStatus();
+        if (response && response.success) {
+          this.autoUpdateStatus.isRunning = response.is_running;
+          this.autoUpdateStatus.pid = response.pid;
+          this.autoUpdateStatus.lastChecked = new Date().toLocaleString();
+        } else {
+          console.error('检查自动更新服务状态失败:', response?.message || '未知错误');
+          alert('检查服务状态失败: ' + (response?.message || '未知错误'));
+        }
+      } catch (error) {
+        console.error('检查自动更新服务状态时发生错误:', error);
+        alert('检查服务状态时发生错误，请稍后重试');
+      }
+    },
+    
+    // 启动自动更新服务
+    async startAutoUpdateService() {
+      try {
+        this.loading = true;
+        const response = await startAutoUpdateService();
+        if (response && response.success) {
+          alert('自动更新服务已成功启动');
+          // 重新检查状态
+          await this.checkAutoUpdateStatus();
+        } else {
+          console.error('启动自动更新服务失败:', response?.message || '未知错误');
+          alert('启动服务失败: ' + (response?.message || '未知错误'));
+        }
+      } catch (error) {
+        console.error('启动自动更新服务时发生错误:', error);
+        alert('启动服务时发生错误，请稍后重试');
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    // 停止自动更新服务
+    async stopAutoUpdateService() {
+      try {
+        if (!confirm('确定要停止自动更新服务吗？')) {
+          return;
+        }
+        
+        this.loading = true;
+        const response = await stopAutoUpdateService();
+        if (response && response.success) {
+          alert('自动更新服务已成功停止');
+          // 重新检查状态
+          await this.checkAutoUpdateStatus();
+        } else {
+          console.error('停止自动更新服务失败:', response?.message || '未知错误');
+          alert('停止服务失败: ' + (response?.message || '未知错误'));
+        }
+      } catch (error) {
+        console.error('停止自动更新服务时发生错误:', error);
+        alert('停止服务时发生错误，请稍后重试');
+      } finally {
+        this.loading = false;
+      }
+    },
+    
     // 刷新所有数据
     async refreshAllData() {
       try {
@@ -677,10 +797,121 @@ export default {
   mounted() {
     // 组件挂载时调用综合API加载所有数据
     this.fetchDashboardData();
+    // 检查自动更新服务状态
+    this.checkAutoUpdateStatus();
   }
 }
 </script>
 
 <style lang="scss" scoped>
 @import '../assets/scss/admin-panel.scss';
+
+// 自动更新控制模块样式
+.update-status-section {
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.status-label {
+  font-weight: bold;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.status-value {
+  font-size: 16px;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.status-running {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.status-stopped {
+  background-color: #f44336;
+  color: white;
+}
+
+.status-details,
+.status-timestamp {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.control-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.check-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.check-btn:hover:not(:disabled) {
+  background-color: #1976D2;
+}
+
+.start-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.start-btn:hover:not(:disabled) {
+  background-color: #388E3C;
+}
+
+.stop-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.stop-btn:hover:not(:disabled) {
+  background-color: #d32f2f;
+}
+
+.update-info {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.update-info h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.update-info p {
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #ccc;
+}
 </style>

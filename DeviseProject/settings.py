@@ -108,6 +108,14 @@ DATABASES = {
         "PASSWORD": '123456',
         "HOST": 'localhost',
         "PORT": 3306,
+        "CONN_MAX_AGE": 0,  # 不保持连接池，每次操作后关闭连接
+        "OPTIONS": {
+            'connect_timeout': 10,  # 连接超时时间（秒）
+            'read_timeout': 30,     # 读取超时时间（秒）
+            'write_timeout': 30,    # 写入超时时间（秒）
+            'charset': 'utf8mb4',   # 字符集
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 

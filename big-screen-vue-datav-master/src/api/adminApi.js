@@ -145,13 +145,46 @@ export const updateCarInfo = async (carData) => {
   }
 }
 
-// 获取更新日志
-export const getUpdateLogs = async () => {
+// 获取爬虫日志
+export const getCrawlerLogs = async () => {
   try {
-    const response = await service.get('/myApp/getUpdateLogs/')
+    const response = await service.get('/myApp/getCrawlerLogs/')
     return response.data
   } catch (error) {
-    console.error('获取更新日志失败:', error)
+    console.error('获取爬虫日志失败:', error)
+    throw error
+  }
+}
+
+// 启动自动更新服务
+export const startAutoUpdateService = async () => {
+  try {
+    const response = await service.post('/myApp/startAutoUpdate/')
+    return response.data
+  } catch (error) {
+    console.error('启动自动更新服务失败:', error)
+    throw error
+  }
+}
+
+// 停止自动更新服务
+export const stopAutoUpdateService = async () => {
+  try {
+    const response = await service.post('/myApp/stopAutoUpdate/')
+    return response.data
+  } catch (error) {
+    console.error('停止自动更新服务失败:', error)
+    throw error
+  }
+}
+
+// 检查自动更新服务状态
+export const checkAutoUpdateServiceStatus = async () => {
+  try {
+    const response = await service.get('/myApp/checkAutoUpdateStatus/')
+    return response.data
+  } catch (error) {
+    console.error('检查自动更新服务状态失败:', error)
     throw error
   }
 }
