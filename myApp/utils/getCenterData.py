@@ -5,8 +5,10 @@ from.getPublicData import *
 def getBaseData():
     cars = list(getAllCars())
     sumCar = len(cars)
-    highVolume = cars[0].saleVolume
-    topCar = cars[0].carName
+    if sumCar == 0:
+        return 0, 0, '', '', '', 0.0
+    highVolume = getattr(cars[0], 'saleVolume', 0)
+    topCar = getattr(cars[0], 'carName', '')
     # 车型
     carModels = {}
     maxModel = 0
@@ -35,10 +37,18 @@ def getBaseData():
     carPrices = {}
     aveagePrice = 0
     sumPrice = 0
+    valid_pairs = 0
     for i in cars:
-        x = json.loads(i.price)[0] + json.loads(i.price)[1]
-        sumPrice += x
-    aveagePrice = sumPrice / (sumCar * 2)
+        try:
+            price_list = json.loads(i.price)
+            if isinstance(price_list, list) and len(price_list) >= 2:
+                x = float(price_list[0]) + float(price_list[1])
+                sumPrice += x
+                valid_pairs += 1
+        except Exception:
+            pass
+    if valid_pairs > 0:
+        aveagePrice = sumPrice / (valid_pairs * 2)
     averagePrice = round(aveagePrice, 2)
     return sumCar, highVolume, topCar, mostModel, mostBrand, averagePrice
 

@@ -305,24 +305,72 @@
   }
 
   // 更新按钮样式
-  .update-options {
+  .update-button-wrapper {
     display: flex;
-    margin-bottom: 20px;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
 
-    .update-btn {
-      padding: 10px 20px;
-      margin-right: 10px;
-      background-color: #165dff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+  .button-group {
+    background-color: rgba(51, 65, 85, 0.5);
+    padding: 12px;
+    border-radius: 8px;
+  }
 
-      &:hover {
-        background-color: #0e4cca;
-      }
-    }
+  .button-group h3 {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .control-btn,
+  .start-btn,
+  .stop-btn,
+  .refresh-btn {
+    padding: 8px 16px;
+    margin-right: 10px;
+    background-color: #1e293b;
+    color: #ffffff;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 110px;
+  }
+
+  .control-btn:hover,
+  .start-btn:hover,
+  .stop-btn:hover,
+  .refresh-btn:hover {
+    background-color: #334155;
+  }
+
+  .start-btn {
+    background-color: #165dff;
+    border-color: #165dff;
+  }
+
+  .start-btn:hover {
+    background-color: #0e4cca;
+  }
+
+  .stop-btn {
+    background-color: #ef4444;
+    border-color: #ef4444;
+  }
+
+  .stop-btn:hover {
+    background-color: #dc2626;
+  }
+
+  .refresh-btn {
+    background-color: #22c55e;
+    border-color: #22c55e;
+  }
+
+  .refresh-btn:hover {
+    background-color: #16a34a;
   }
 
   // 更新日志样式

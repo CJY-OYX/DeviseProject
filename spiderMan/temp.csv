@@ -1,1 +1,19 @@
 brand,carName,carImg,saleVolume,price,manufacturer,rank,carModel,energyType,marketTime,insure
+五菱汽车,五菱宏光MINIEV,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/de7a9eb4f0ee44249fd9f8d53837e2d7~tplv-resize:640:0.png?psm=motor.rank.data,61506,"[3.58, 5.58]",上汽通用五菱,1,微型车,纯电动,2025.02,3年或12万公里
+吉利银河,星愿,https://p9-dcd.byteimg.com/tos-cn-i-dcdx/ac8a5ee1d8774df59ccd8aaa375fac7e~tplv-resize:640:0.png?psm=motor.rank.data,44239,"[6.58, 9.58]",吉利银河,2,小型车,纯电动,2025.10,6年或15万公里
+日产,轩逸,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/ecc4bc88c3f146dca8180b4932f217b7~tplv-resize:640:0.png?psm=motor.rank.data,33903,"[6.46, 15.69]",东风日产,3,紧凑型车,汽油,2025.08,3年或10万公里
+小米汽车,小米YU7,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/d7ff66203a754169bf75cb1f0f713420~tplv-resize:640:0.png?psm=motor.rank.data,33662,"[25.35, 32.99]",小米汽车,4,中大型SUV,纯电动,2025.06,5年或10万公里
+吉利汽车,博越L,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/46af725ac086438e951af24db1b51e88~tplv-resize:640:0.png?psm=motor.rank.data,32942,"[9.29, 14.27]",吉利汽车,5,紧凑型SUV,汽油,2025.05,4年或10万公里
+比亚迪,秦PLUS DM,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/02771d79bfea4f24bb6fab711346d7c3~tplv-resize:640:0.png?psm=motor.rank.data,27674,"[6.98, 9.38]",比亚迪,6,紧凑型车,插电式混合动力,2025.02,6年或15万公里
+大众,速腾,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/a97e90692eda4d20b40c5b8593f89119~tplv-resize:640:0.png?psm=motor.rank.data,25038,"[8.89, 13.19]",一汽-大众,7,紧凑型车,汽油,2025.09,3年或10万公里
+比亚迪,海鸥,https://p9-dcd.byteimg.com/tos-cn-i-dcdx/c9079d51a70f4fcd998ca89ad7badb57~tplv-resize:640:0.png?psm=motor.rank.data,24706,"[6.38, 8.08]",比亚迪,8,小型车,纯电动,2025.02,6年或15万公里
+丰田,RAV4荣放,https://p9-dcd.byteimg.com/tos-cn-i-dcdx/4ff1a8262999490386495810df831925~tplv-resize:640:0.png?psm=motor.rank.data,23213,"[12.98, 22.88]",一汽丰田,9,紧凑型SUV,汽油,2025.11,3年或10万公里
+大众,朗逸,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/32129dbc6b824b1abf2e2388c1890b95~tplv-resize:640:0.png?psm=motor.rank.data,22422,"[7.99, 11.29]",上汽大众,10,紧凑型车,汽油,2025.11,3年或10万公里
+吉利汽车,星越L,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/588bea89ef084984b66a2ee353b261ff~tplv-resize:640:0.png?psm=motor.rank.data,21704,"[12.97, 16.67]",吉利汽车,11,紧凑型SUV,汽油,2025.09,5年或15万公里
+长安启源,长安Lumin,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/5f42a6e07fd54fd8b6a02eb1e44bc218~tplv-resize:640:0.png?psm=motor.rank.data,20520,"[3.59, 6.99]",长安启源,12,微型车,纯电动,2025.10,3年或12万公里
+方程豹,钛7,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/3bb475c050b541e494e0fc3c10da4d40~tplv-resize:640:0.png?psm=motor.rank.data,20024,"[17.98, 21.98]",方程豹,13,中大型SUV,插电式混合动力,2025.09,6年或15万公里
+比亚迪,元UP,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/f3bd2e9744044187b726b05ecccdce42~tplv-resize:640:0.png?psm=motor.rank.data,19813,"[7.48, 10.98]",比亚迪,14,小型SUV,纯电动,2025.07,6年或15万公里
+特斯拉,Model Y,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/cff53a8d66504170af56e38597e0fed9~tplv-resize:640:0.png?psm=motor.rank.data,19488,"[26.35, 31.35]",特斯拉中国,15,中型SUV,纯电动,2025.03,4年或8万公里
+丰田,凯美瑞,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/c9f5aa2789ee431883f912465dad6047~tplv-resize:640:0.png?psm=motor.rank.data,19303,"[13.58, 22.38]",广汽丰田,16,中型车,汽油,2025.07,3年或10万公里
+大众,途观L,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/531775569f224f82a4f363c9ae6461f7~tplv-resize:640:0.png?psm=motor.rank.data,19230,"[13.98, 22.58]",上汽大众,17,中型SUV,汽油,2025.09,3年或10万公里
+哈弗,哈弗大狗,https://p3-dcd.byteimg.com/tos-cn-i-dcdx/413defba9aa74f2892f7f7ced70ce53a~tplv-resize:640:0.png?psm=motor.rank.data,18875,"[9.09, 12.49]",长城汽车,18,紧凑型SUV,汽油,2025.07,3年或10万公里

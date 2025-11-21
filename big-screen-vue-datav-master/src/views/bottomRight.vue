@@ -46,13 +46,16 @@
 export default {
   data(){
     return{
-      carData:''
+      carData:[]
     }
   },
   components: {},
   async mounted() {
     const res = await this.$http.get('myApp/bottomRight')
-    this.carData = res.data.carData
+    const list = res && res.data && Array.isArray(res.data.carData) ? res.data.carData : []
+    if (list.length > 0) {
+      this.carData = list
+    }
   }
 };
 </script>

@@ -1,7 +1,11 @@
 <template>
   <div>
 <!--    <Chart :cdata="cdata" />-->
-    <div ref="chart" style="width: 300px;height: 340px" v-bind:key="cdata.seriesData[0][0]"></div>
+    <div
+      ref="chart"
+      style="width: 300px;height: 340px"
+      v-bind:key="cdata.seriesData && cdata.seriesData.length ? cdata.seriesData[0].name : 'default'"
+    ></div>
   </div>
 </template>
 
@@ -90,20 +94,20 @@ export default {
       this.myChart.setOption(option);
     },
     loopAnimation(){
+      if (!this.cdata.seriesData || this.cdata.seriesData.length === 0) return
       setInterval(() => {
         this.myChart.dispatchAction({
           type: 'downplay',
           seriesIndex: 0,
           dataIndex: this.currentIndex
-        });
-        this.currentIndex = (this.currentIndex + 1) % this.cdata.seriesData.length;
-
+        })
+        this.currentIndex = (this.currentIndex + 1) % this.cdata.seriesData.length
         this.myChart.dispatchAction({
           type: 'highlight',
           seriesIndex: 0,
           dataIndex: this.currentIndex
         })
-      },2000)
+      }, 2000)
     }
   }
 }

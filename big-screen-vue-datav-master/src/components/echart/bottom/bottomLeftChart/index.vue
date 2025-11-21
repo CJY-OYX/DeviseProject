@@ -127,9 +127,14 @@ export default {
   },
   async mounted () {
     const res = await this.$http.get('myApp/bottomLeft/')
-    this.$set(this.cdata, 'category', res.data.brandList)
-    this.$set(this.cdata, 'lineData', res.data.priceList)
-    this.$set(this.cdata, 'barData', res.data.volumeList)
+    const brands = res && res.data && Array.isArray(res.data.brandList) ? res.data.brandList : []
+    const prices = res && res.data && Array.isArray(res.data.priceList) ? res.data.priceList : []
+    const volumes = res && res.data && Array.isArray(res.data.volumeList) ? res.data.volumeList : []
+    if (brands.length > 0 && prices.length > 0 && volumes.length > 0) {
+      this.$set(this.cdata, 'category', brands)
+      this.$set(this.cdata, 'lineData', prices)
+      this.$set(this.cdata, 'barData', volumes)
+    }
     // this.setData();
     // this.initChart()
   },

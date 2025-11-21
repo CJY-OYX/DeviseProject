@@ -1009,8 +1009,35 @@ def executeDataUpdate(request):
                 update_type = request.POST.get('updateType', 'full')
             
             if update_type == 'full':
-                # 获取项目根目录
+                # 手动更新优先：若有自动更新或其它爬虫在运行，则先停止
+                try:
+                    running_pids = []
+                    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+                        if proc.info['name'].lower() == 'python.exe' and proc.info['cmdline']:
+                            cmdline = ' '.join(proc.info['cmdline'])
+                            if ('auto_update.py' in cmdline) or ('spiderMan' in cmdline and 'spiders.py' in cmdline):
+                                running_pids.append(proc.info['pid'])
+                    for pid in running_pids:
+                        try:
+                            p = psutil.Process(pid)
+                            p.terminate()
+                            p.wait(timeout=20)
+                        except Exception:
+                            try:
+                                p.kill()
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+                # 清理锁文件
                 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                lock_file_path = os.path.join(project_root, 'spiderMan', 'update.lock')
+                try:
+                    if os.path.exists(lock_file_path):
+                        os.remove(lock_file_path)
+                except Exception:
+                    pass
+                # 获取项目根目录
                 print(f"项目根目录: {project_root}")
                 
                 # 设置环境变量

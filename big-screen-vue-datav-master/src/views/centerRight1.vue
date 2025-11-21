@@ -50,16 +50,25 @@ export default {
   methods: {
     async electricClick(){
       const res = await this.$http.get('myApp/centerRightChange/0')
-      this.$set(this.config, 'data', res.data.realData)
+      const list = res && res.data && Array.isArray(res.data.realData) ? res.data.realData : []
+      if (list.length > 0) {
+        this.$set(this.config, 'data', list)
+      }
     },
     async oilClick(){
       const res = await this.$http.get('myApp/centerRightChange/1')
-      this.$set(this.config, 'data', res.data.realData)
+      const list = res && res.data && Array.isArray(res.data.realData) ? res.data.realData : []
+      if (list.length > 0) {
+        this.$set(this.config, 'data', list)
+      }
     }
   },
   async mounted() {
     const res = await this.$http.get('myApp/centerRightChange/1')
-    this.$set(this.config, 'data', res.data.realData)
+    const list = res && res.data && Array.isArray(res.data.realData) ? res.data.realData : []
+    if (list.length > 0) {
+      this.$set(this.config, 'data', list)
+    }
   }
 }
 </script>

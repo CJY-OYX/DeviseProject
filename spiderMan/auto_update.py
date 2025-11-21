@@ -73,6 +73,17 @@ def get_latest_rank_data():
     
     while retry_count < max_retries and not success:
         try:
+            # 简易互斥锁，防止并发运行导致写入重复
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            spider_man_dir = os.path.dirname(os.path.abspath(__file__))
+            lock_file_path = os.path.join(spider_man_dir, 'update.lock')
+            if os.path.exists(lock_file_path):
+                print(f"[{datetime.now()}] 检测到更新锁文件，已有更新进程运行，跳过本轮")
+                logging.warning("检测到更新锁文件，已有更新进程运行，跳过本轮")
+                return False
+            # 写入锁文件
+            with open(lock_file_path, 'w', encoding='utf-8') as lf:
+                lf.write(f"pid={os.getpid()}, time={datetime.now()}\n")
             # 确保Django环境可用
             if not DJANGO_AVAILABLE:
                 print("Django环境不可用，尝试重新初始化...")
@@ -86,10 +97,6 @@ def get_latest_rank_data():
             
             # 重置数据库连接
             reset_django_connection()
-            
-            # 获取项目根目录和spiderMan目录
-            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            spider_man_dir = os.path.dirname(os.path.abspath(__file__))
             
             print(f"[{datetime.now()}] 项目根目录: {project_root}")
             print(f"[{datetime.now()}] SpiderMan目录: {spider_man_dir}")
@@ -159,6 +166,13 @@ def get_latest_rank_data():
             logging.error(f"异常详情: {traceback_info}")
             # 非数据库连接错误，不再重试
             return False
+        finally:
+            # 清理锁文件
+            try:
+                if os.path.exists(lock_file_path):
+                    os.remove(lock_file_path)
+            except Exception:
+                pass
     
     error_msg = f"[{datetime.now()}] 已达到最大重试次数({max_retries})，数据更新失败"
     print(error_msg)

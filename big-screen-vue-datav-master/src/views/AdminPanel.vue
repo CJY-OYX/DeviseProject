@@ -22,21 +22,15 @@
           >
             {{ item.name }}
           </button>
-          <button 
-            class="nav-btn"
-            :class="{ active: activeModule === 'autoUpdateControl' }"
-            @click="switchModule('autoUpdateControl')"
-          >
-            自动更新控制
-          </button>
+          
           <button class="nav-btn logout-btn" @click="logout">退出登录</button>
         </div>
 
         <!-- 内容区域 -->
         <div class="body-box">
-          <!-- 自动更新控制模块 -->
-          <div v-if="activeModule === 'autoUpdateControl'" class="admin-module">
-            <h2>自动更新服务控制</h2>
+          <!-- 更新管理模块 -->
+          <div v-if="activeModule === 'updateManagement'" class="admin-module">
+            <h2>更新管理</h2>
             <div class="module-content">
               <div class="update-status-section">
                 <div class="status-indicator">
@@ -54,30 +48,43 @@
                   <p>最后检查时间: {{ autoUpdateStatus.lastChecked || '未检查' }}</p>
                 </div>
                 
-                <div class="control-buttons">
-                  <button 
-                    class="control-btn check-btn" 
-                    @click="checkAutoUpdateStatus"
-                    :disabled="loading"
-                  >
-                    检查状态
-                  </button>
-                  
-                  <button 
-                    class="control-btn start-btn" 
-                    @click="startAutoUpdateService"
-                    :disabled="loading || autoUpdateStatus.isRunning"
-                  >
-                    启动服务
-                  </button>
-                  
-                  <button 
-                    class="control-btn stop-btn" 
-                    @click="stopAutoUpdateService"
-                    :disabled="loading || !autoUpdateStatus.isRunning"
-                  >
-                    停止服务
-                  </button>
+                <div class="update-button-wrapper">
+                  <div class="button-group auto-group">
+                    <h3>自动更新</h3>
+                    <button 
+                      class="control-btn check-btn" 
+                      @click="checkAutoUpdateStatus"
+                      :disabled="loading"
+                    >
+                      检查状态
+                    </button>
+                    <button 
+                      class="control-btn start-btn" 
+                      @click="startAutoUpdateService"
+                      :disabled="loading || autoUpdateStatus.isRunning"
+                    >
+                      启动服务
+                    </button>
+                    <button 
+                      class="control-btn stop-btn" 
+                      @click="stopAutoUpdateService"
+                      :disabled="loading || !autoUpdateStatus.isRunning"
+                    >
+                      停止服务
+                    </button>
+                  </div>
+                  <div class="button-group manual-group">
+                    <h3>手动更新</h3>
+                    <button class="start-btn" @click="startDataUpdate" :disabled="isUpdating">
+                      {{ isUpdating ? '更新中...' : '开始数据更新' }}
+                    </button>
+                    <button class="stop-btn" @click="stopDataUpdate" :disabled="!isUpdating">
+                      停止数据更新
+                    </button>
+                    <button class="refresh-btn" @click="refreshAllData">
+                      刷新数据
+                    </button>
+                  </div>
                 </div>
                 
                 <div class="update-info">
@@ -87,6 +94,7 @@
                 </div>
               </div>
             </div>
+            
           </div>
           
           <!-- 用户管理模块 -->
@@ -226,56 +234,7 @@
             </div>
           </div>
           
-          <!-- 数据更新模块 -->
-          <div v-else-if="activeModule === 'dataUpdate'" class="admin-module">
-            <h2>数据更新</h2>
-            <div class="module-content">
-              <div class="update-info">
-                <div class="last-update">
-                  <h3>最后更新时间</h3>
-                  <p class="update-time">{{ lastUpdateTime }}</p>
-                </div>
-              </div>
-              
-              <div class="update-buttons">
-                <button class="start-btn" @click="startAutoUpdateService" :disabled="isUpdating">
-                  {{ isUpdating ? '更新中...' : '启动自动更新' }}
-                </button>
-                <button class="stop-btn" @click="stopAutoUpdateService" :disabled="!isUpdating">
-                  停止自动更新
-                </button>
-                <button class="refresh-btn" @click="refreshAllData">
-                  刷新数据
-                </button>
-              </div>
-              
-              <div class="update-tips">
-                <h4>更新提示：</h4>
-                <ul>
-                  <li>点击"开始更新"将触发数据爬取脚本，可能需要较长时间</li>
-                  <li>更新过程中请勿关闭页面</li>
-                  <li>如需中断更新，请点击"停止更新"按钮</li>
-                  <li>点击"刷新数据"将重新加载所有管理面板数据</li>
-                </ul>
-              </div>
-              
-              <!-- 爬虫输出日志显示 -->
-              <div class="crawler-logs">
-                <h4>爬取日志：</h4>
-                <div class="logs-container" v-if="isUpdating">
-                  <div class="log-item" v-for="(log, index) in crawlerLogs" :key="index">
-                    {{ log }}
-                  </div>
-                  <div v-if="crawlerLogs.length === 0" class="no-logs">
-                    等待爬取日志输出...
-                  </div>
-                </div>
-                <div v-else class="logs-disabled">
-                  <p>数据更新未开始，暂无日志</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -298,7 +257,7 @@ export default {
         { id: 'userManagement', name: '用户管理' },
         { id: 'userInfoManagement', name: '用户信息管理' },
         { id: 'dataManagement', name: '数据管理' },
-        { id: 'dataUpdate', name: '数据更新' }
+        { id: 'updateManagement', name: '更新管理' }
       ],
       searchQuery: '',
       // 真实数据存储
@@ -335,8 +294,9 @@ export default {
       } else if (moduleId === 'dataManagement') {
         this.fetchCarInfoList();
         this.fetchCarDataStats();
-      } else if (moduleId === 'dataUpdate') {
+      } else if (moduleId === 'updateManagement') {
         this.fetchLastUpdateTime();
+        this.checkAutoUpdateStatus();
       }
     },
     logout() {

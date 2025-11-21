@@ -1,4 +1,4 @@
-from myApp.models import *
+from myApp.models import carInfo
 
 def getAllCars():
     return carInfo.objects.all()

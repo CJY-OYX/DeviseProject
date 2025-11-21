@@ -5,7 +5,7 @@ import os
 # 添加项目根目录到Python路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import requests,csv,time,json,re,pandas as pd,random
+import requests,csv,time,json,re,pandas as pd,random,hashlib
 from lxml import etree
 import django
 
@@ -220,7 +220,52 @@ class spider(object):
             
             data = self.clear_csv()
             print(f"准备处理{len(data)}条数据")
-            
+
+            # 覆盖阈值控制：抓取数据量过少时跳过快照覆盖
+            MIN_ROWS = 100
+            if len(data) < MIN_ROWS:
+                print(f"本次抓取数据量({len(data)})低于阈值({MIN_ROWS})，跳过carInfo覆盖，保留上一次快照")
+                return
+
+            # 变更检测：基于(rank, carName, saleVolume)签名比对，数据未变更则跳过覆盖
+            def normalize_rank(rv):
+                try:
+                    s = str(rv)
+                    if '.' in s:
+                        s = s.split('.')[0]
+                    return str(int(s))
+                except Exception:
+                    return '0'
+
+            def build_signature_rows_from_temp(temp_rows):
+                rows = []
+                for car in temp_rows:
+                    rank_n = normalize_rank(car[6])
+                    name_n = str(car[1])
+                    sale_n = str(car[3])
+                    rows.append((rank_n, name_n, sale_n))
+                rows.sort(key=lambda x: int(x[0]))
+                return rows
+
+            def build_signature_rows_from_db():
+                rows = []
+                for rec in carInfo.objects.values('rank', 'carName', 'saleVolume'):
+                    rank_n = normalize_rank(rec.get('rank'))
+                    name_n = str(rec.get('carName', ''))
+                    sale_n = str(rec.get('saleVolume', ''))
+                    rows.append((rank_n, name_n, sale_n))
+                rows.sort(key=lambda x: int(x[0]))
+                return rows
+
+            new_rows = build_signature_rows_from_temp(data)
+            old_rows = build_signature_rows_from_db()
+            new_sig = hashlib.sha256(json.dumps(new_rows, ensure_ascii=False).encode('utf-8')).hexdigest()
+            old_sig = hashlib.sha256(json.dumps(old_rows, ensure_ascii=False).encode('utf-8')).hexdigest()
+
+            if new_sig == old_sig:
+                print("检测到排行榜数据未发生变化，跳过carInfo覆盖")
+                return
+
             # 批量创建对象列表
             car_info_objects = []
             # 根据之前的去重策略，AllCarInfo表不再使用批量追加，而是检查后插入
