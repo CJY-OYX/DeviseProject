@@ -32,7 +32,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   transform-origin: left top;
-  overflow: hidden;
+  overflow: visible;
 
   .bg {
     width: 100%;
@@ -57,111 +57,77 @@
     display: flex;
     flex-direction: column;
 
-    /* 顶部装饰线 */
-    .dv-dec-10,
-    .dv-dec-10-s {
-      width: 33.3%;
-      height: 5px;
-    }
-    .dv-dec-10-s {
-      transform: rotateY(180deg);
-    }
-    .dv-dec-8 {
-      width: 200px;
-      height: 50px;
+    /* 统一为首页导航栏样式 */
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      padding: 0 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.08);
     }
 
-    /* 标题 */
-    .title {
-      position: relative;
-      width: 500px;
-      text-align: center;
-      background-size: cover;
-      background-repeat: no-repeat;
-
-      .title-text {
-        font-size: 24px;
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translate(-50%);
-      }
-
-      .dv-dec-6 {
-        position: absolute;
-        bottom: -30px;
-        left: 50%;
-        width: 250px;
-        height: 8px;
-        transform: translate(-50%);
-      }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    /* 第二行导航 */
-    .aside-width {
-      width: 40%;
-    }
-
-    /* 平行四边形按钮 */
-    .react-left,
-    .react-right {
-      font-size: 18px;
-      height: 50px;
-      line-height: 50px;
-      text-align: center;
-      position: relative;
+    .nav-item {
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 8px;
       cursor: pointer;
+      transition: box-shadow 0.25s ease, transform 0.25s ease;
     }
 
-    .react-left {
-      transform: skewX(45deg);
-      background-color: #0f1325;
+    .nav-item .text { font-size: 18px; }
 
-      &.react-l-s {
-        width: 500px;
-        text-align: left;
-      }
-
-      .text {
-        display: inline-block;
-        transform: skewX(-45deg);
-        color: #fff;
-        &:hover {
-          text-decoration: underline;
-          text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
-        }
-      }
+    .header-title { flex: 1; text-align: center; }
+    .header-title .title-text {
+      font-size: 22px;
+      letter-spacing: 0.6px;
+      color: #eaf7ff;
+      font-weight: 600;
+      text-shadow: 0 0 8px rgba(0, 209, 255, 0.25);
     }
 
-    .react-right {
-      transform: skewX(-45deg);
-      background-color: #0f1325;
-
-      &.react-l-s {
-        width: 500px;
-        text-align: right;
-      }
-
-      .react-after {
-        position: absolute;
-        right: -25px;
-        top: 0;
-        height: 50px;
-        width: 50px;
-        background-color: #0f1325;
-        transform: skewX(45deg);
-      }
-
-      .text {
-        display: inline-block;
-        transform: skewX(45deg);
-        color: #fff;
-        &:hover {
-          text-decoration: underline;
-          text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
-        }
-      }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .user-block { position: relative; }
+    .user-block .username {
+      display: inline-flex;
+      align-items: center;
+      background-color: #2ecc71;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      text-decoration: none;
     }
+    .user-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background-color: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      min-width: 140px;
+      z-index: 9999;
+      will-change: transform;
+    }
+    .menu-list { list-style: none; margin: 0; padding: 6px 0; }
+    .menu-item { padding: 8px 14px; color: #eaf7ff; cursor: pointer; }
+    .menu-item:hover { background-color: rgba(0, 209, 255, 0.15); color: #0b0f1a; }
+
+    /* 移除旧装饰与绝对定位标题，改用 header-bar 中标题 */
+
+    /* 移除旧的平行四边形导航，统一为 nav-item */
 
     /* 用户名 / 登录按钮配色 */
     .bg-color-green {
@@ -178,21 +144,67 @@
     }
 
     /* ========= 2. 表单区域（宽度高度自适应） ========= */
-    .body-box {
-      flex: 1;                   /* 占剩余全部高度 */
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
+  .body-box {
+      flex: 1;
       padding: 16px 32px;
       box-sizing: border-box;
-    }
+      .edit-layout {
+        display: grid;
+        grid-template-columns: 5fr 7fr;
+        grid-gap: 16px;
+        height: 100%;
+      }
+      .left-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.06);
+      }
+      .left-preview .greeting {
+        color: #eaf7ff;
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+      .left-preview .preview-media {
+        width: 100%;
+        max-width: 600px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .left-preview .car-image {
+        max-width: 100%;
+        max-height: 360px;
+        object-fit: contain;
+        border-radius: 6px;
+        box-shadow: 0 0 12px rgba(0, 209, 255, 0.25);
+      }
+      .left-preview .car-silhouette {
+        width: 80%;
+        max-width: 480px;
+        height: auto;
+      }
+      .left-preview .preview-name {
+        color: #eaf7ff;
+        margin-top: 12px;
+        font-size: 18px;
+      }
+      .right-form {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+      }
+  }
 
-    .content-box {
+  .content-box {
       width: 100%;
       height: 100%;
       font-size: 30px;
       padding: 15px;
-    }
+  }
 
     .user-detail-border-box {
       width: 100%;
@@ -212,7 +224,6 @@
   background-color: #00D1FF;
   border: 1px solid #00D1FF;
   box-shadow: 0 0 12px rgba(0, 209, 255, 0.45);
-  transform: skewX(45deg) scale(1.02);
   position: relative;
 }
 .nav-active::after {

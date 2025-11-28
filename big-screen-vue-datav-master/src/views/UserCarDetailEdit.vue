@@ -1,81 +1,87 @@
 <template>
   <div id="userCarDetailEdit" ref="appRef">
-    <div class="bg themed-bg-edit">
+    <div class="bg bg-image-cover">
       <dv-loading v-if="loading">Loading...</dv-loading>
       <div v-else class="host-body">
-        <div class="d-flex jc-center">
-          <dv-decoration-10 class="dv-dec-10" />
-          <div class="d-flex jc-center">
-            <dv-decoration-8 class="dv-dec-8" :color="decorationColor" />
-            <div class="title">
-              <span class="title-text">编辑用户车辆详情</span>
-              <dv-decoration-5
-                class="dv-dec-6"
-                :reverse="true"
-              />
-            </div>
-            <dv-decoration-8
-              class="dv-dec-8"
-              :reverse="true"
-              :color="decorationColor"
-            />
-          </div>
-          <dv-decoration-10 class="dv-dec-10-s" />
-        </div>
-
-        <!-- 第二行 -->
-        <div class="d-flex jc-between px-2">
-          <div class="d-flex aside-width">
-            <div class="react-left ml-4 react-l-s" :class="isHomePage ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;cursor:pointer;" @click="goToHome">
+        <div class="header-bar">
+          <div class="header-left">
+            <div class="nav-item" :class="isHomePage ? 'nav-active' : 'nav-inactive'" @click="goToHome">
               <span class="text">首页</span>
             </div>
-            <div class="react-left ml-3 react-l-s" :class="(!isHomePage) ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;cursor:pointer;" @click="goToEdit">
-              <span class="text">编辑</span>
-            </div>
           </div>
-          <div class="d-flex aside-width">
-            <div class="react-right bg-color-green mr-3" v-if="isLoggedIn" style="display: flex; justify-content: center; align-items: center; width: 300px;">
-              <span class="text fw-b" @click="entryInfo">{{ username }}</span>
+          <div class="header-title">
+            <span class="title-text">编辑用户车辆详情</span>
+          </div>
+          <div class="header-right">
+            <div class="user-block" v-if="isLoggedIn" ref="userBlock">
+              <span class="username fw-b" @click="toggleUserMenu">{{ username }}</span>
+              <div class="user-menu" v-if="showUserMenu">
+                <ul class="menu-list">
+                  <li class="menu-item" @click="handleUserMenu('detail')">进入详情页</li>
+                  <li class="menu-item" @click="handleUserMenu('edit')">编辑</li>
+                  <li class="menu-item" @click="handleUserMenu('logout')">登出</li>
+                </ul>
+              </div>
             </div>
-            <div class="react-right mr-4 react-l-s">
-              <span class="react-after"></span>
-              <span class="text">{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span>
+            <div class="user-block" v-else>
+              <router-link to="/login" class="username fw-b">登录</router-link>
+            </div>
+            <div class="date-block">
+              <span class="date-text">{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span>
             </div>
           </div>
         </div>
 
         <div class="body-box">
-          <div class="content-box">
-            <dv-border-box-1 class="user-detail-border-box">
-              <div class="user-detail-form">
-                <div class="form-group">
-                  <label for="carName" style="color: white">车辆名字</label>
-                  <div class="search-input-container">
-                    <input type="text" id="carName" v-model="carName" @input="searchCars" placeholder="请输入车辆名字">
-                    <div class="search-results" v-if="searchResults.length > 0">
-                      <div v-for="car in searchResults" :key="car.id" @click="selectCar(car)">{{ car.carName }} ({{ car.carModel }})</div>
+          <div class="edit-layout">
+            <div class="left-preview">
+              <div class="greeting">
+                <span>你好，{{ username || '用户' }}</span>
+              </div>
+              <div class="preview-media">
+                <img v-if="carImageUrl" :src="carImageUrl" alt="车辆图片" class="car-image"/>
+                <svg v-else class="car-silhouette" viewBox="0 0 512 256" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="#1b2337" d="M32 160c0-48 64-80 96-96s128-32 160-32 64 64 96 80 64 16 64 48-16 48-48 48H80c-32 0-48-16-48-48z"/>
+                  <circle cx="128" cy="192" r="28" fill="#2a3a5a"/>
+                  <circle cx="384" cy="192" r="28" fill="#2a3a5a"/>
+                </svg>
+              </div>
+              <div class="preview-name">
+                <span>{{ carName || '未填写车辆名称' }}</span>
+              </div>
+            </div>
+            <div class="right-form">
+              <dv-border-box-1 class="user-detail-border-box">
+                <div class="user-detail-form">
+                  <div class="form-group">
+                    <label for="carName" style="color: white">车辆名字</label>
+                    <div class="search-input-container">
+                      <input type="text" id="carName" v-model="carName" @input="searchCars" placeholder="请输入车辆名字">
+                      <div class="search-results" v-if="searchResults.length > 0">
+                        <div v-for="car in searchResults" :key="car.id" @click="selectCar(car)">{{ car.carName }} ({{ car.carModel }})</div>
+                      </div>
                     </div>
                   </div>
+                  <div class="form-group">
+                    <label for="carModel" style="color: white">车辆型号</label>
+                    <input type="text" id="carModel" v-model="carModel" placeholder="请输入车辆型号">
+                  </div>
+                  <div class="form-group">
+                    <label for="mileage" style="color: white">车辆公里数</label>
+                    <input type="number" id="mileage" v-model="mileage" placeholder="请输入车辆公里数">
+                  </div>
+                  <div class="form-group">
+                    <label for="purchaseDate" style="color: white">车辆购买时间</label>
+                    <input type="date" id="purchaseDate" v-model="purchaseDate">
+                  </div>
+                  <div class="form-group">
+                    <label for="configuration" style="color: white">车辆配置</label>
+                    <textarea id="configuration" v-model="configuration" placeholder="请输入车辆配置"></textarea>
+                  </div>
+                  <button class="submit-btn" @click="submitForm">更新</button>
                 </div>
-                <div class="form-group">
-                  <label for="carModel" style="color: white">车辆型号</label>
-                  <input type="text" id="carModel" v-model="carModel" placeholder="请输入车辆型号">
-                </div>
-                <div class="form-group">
-                  <label for="mileage" style="color: white">车辆公里数</label>
-                  <input type="number" id="mileage" v-model="mileage" placeholder="请输入车辆公里数">
-                </div>
-                <div class="form-group">
-                  <label for="purchaseDate" style="color: white">车辆购买时间</label>
-                  <input type="date" id="purchaseDate" v-model="purchaseDate">
-                </div>
-                <div class="form-group">
-                  <label for="configuration" style="color: white">车辆配置</label>
-                  <textarea id="configuration" v-model="configuration" placeholder="请输入车辆配置"></textarea>
-                </div>
-                <button class="submit-btn" @click="submitForm">更新</button>
-              </div>
-            </dv-border-box-1>
+              </dv-border-box-1>
+            </div>
           </div>
         </div>
       </div>
@@ -102,17 +108,19 @@ export default {
       dateWeek: null,
       weekday: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
       decorationColor: ['#568aea', '#000000'],
-      isLoggedIn: true,
+      isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
       username: localStorage.getItem('username') || '',
       userId: null,
-      isHomePage: false,
+      isHomePage: this.$route.path === '/',
       carId: null,
       carName: '',
       carModel: '',
       mileage: 0,
       purchaseDate: '',
       configuration: '',
-      searchResults: []
+      searchResults: [],
+      carImageUrl: '',
+      showUserMenu: false
     }
   },
   mounted() {
@@ -132,8 +140,18 @@ export default {
       this.updateTime();
     }, 1000 * 60);
 
+    // 监听路由变化以同步导航状态
+    this.$watch('$route', (to) => {
+      this.isHomePage = to.path === '/';
+    });
+
+    document.addEventListener('click', this.handleDocumentClick);
+
     // 获取车辆详情
     this.fetchCarDetail();
+  },
+  beforeDestroy() {
+    document.removeEventListener('click', this.handleDocumentClick);
   },
   methods: {
     updateTime() {
@@ -150,7 +168,30 @@ export default {
     // 已经在编辑页，什么都不做
     },
     entryInfo() {
-    this.$router.push({ name: 'user-detail' });
+      this.$router.push({ name: 'user-detail' });
+    },
+    toggleUserMenu() {
+      this.showUserMenu = !this.showUserMenu;
+    },
+    handleDocumentClick(e) {
+      const el = this.$refs.userBlock;
+      if (el && !el.contains(e.target)) this.showUserMenu = false;
+    },
+    handleUserMenu(action) {
+      if (action === 'detail') {
+        this.entryInfo();
+      } else if (action === 'edit') {
+        this.goToEdit();
+      } else if (action === 'logout') {
+        this.logout();
+      }
+      this.showUserMenu = false;
+    },
+    logout() {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('username');
+      localStorage.removeItem('userRole');
+      this.$router.push('/login');
     },
     
     fetchCarDetail() {
@@ -179,6 +220,7 @@ export default {
           if (carData) {
             this.carName = carData.carName || carData.car_name;
             this.carModel = carData.carModel || carData.car_model;
+            this.carImageUrl = carData.carImg || '';
           }
 
           // 从user_car_detail字段获取用户车辆详情
@@ -221,6 +263,8 @@ export default {
       })
       .then(response => {
         this.searchResults = response.data.cars
+        const match = this.searchResults.find(item => item.carName === this.carName)
+        if (match && match.carImg) this.carImageUrl = match.carImg
       })
       .catch(error => {
         console.error('搜索车辆失败:', error)
@@ -230,6 +274,7 @@ export default {
     selectCar(car) {
       this.carName = car.carName
       this.carModel = car.carModel
+      this.carImageUrl = car.carImg || ''
       this.searchResults = []
     },
 

@@ -1,6 +1,6 @@
 <template>
   <div id="userInfoDetail" ref="appRef">
-    <div class="bg themed-bg-detail">
+    <div class="bg bg-image-cover">
       <dv-loading v-if="loading">Loading...</dv-loading>
       <div v-else class="host-body">
         <div class="d-flex jc-center">

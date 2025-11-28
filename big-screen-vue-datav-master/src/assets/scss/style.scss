@@ -241,6 +241,14 @@ a {
   100% { box-shadow: 0 0 0 rgba(0, 209, 255, 0); }
 }
 
+// 全局背景图片铺满窗口
+.bg-image-cover {
+  background-image: url('~@/assets/pageBg.png');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
 .glass-card {
   background: map-get($colors, 'glass');
   backdrop-filter: blur(10px);

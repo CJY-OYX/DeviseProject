@@ -1,15 +1,12 @@
 <template>
   <div id="index" ref="appRef">
-    <div class="bg themed-bg-home">
+    <div class="bg bg-image-cover">
       <dv-loading v-if="loading">Loading...</dv-loading>
       <div v-else class="host-body">
         <div class="header-bar">
           <div class="header-left">
             <div class="nav-item" :class="isHomePage ? 'nav-active' : 'nav-inactive'" @click="goToHome">
               <span class="text">首页</span>
-            </div>
-            <div class="nav-item" :class="isEdit ? 'nav-active' : 'nav-inactive'" @click="goToEdit">
-              <span class="text">编辑</span>
             </div>
           </div>
           <div class="header-title">
@@ -21,6 +18,7 @@
               <div class="user-menu" v-if="showUserMenu">
                 <ul class="menu-list">
                   <li class="menu-item" @click="handleUserMenu('detail')">进入详情页</li>
+                  <li class="menu-item" @click="handleUserMenu('edit')">编辑</li>
                   <li class="menu-item" @click="handleUserMenu('logout')">登出</li>
                 </ul>
               </div>
@@ -107,7 +105,6 @@ export default {
       decorationColor: ['#568aea', '#000000'],
       isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
       isHomePage: this.$route.path === '/',
-      isEdit: this.$route.path === '/user-car-detail-edit',
       username: localStorage.getItem('username') || ''
     ,
       showUserMenu: false
@@ -151,6 +148,8 @@ export default {
     handleUserMenu(action) {
       if (action === 'detail') {
         this.entryInfo();
+      } else if (action === 'edit') {
+        this.goToEdit();
       } else if (action === 'logout') {
         this.logout();
       }
