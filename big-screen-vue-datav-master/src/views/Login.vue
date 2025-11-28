@@ -1,5 +1,6 @@
 <template>
   <div class="login-container">
+    <dv-loading v-if="isSubmitting">正在登录...</dv-loading>
     <dv-border-box-1 class="login-border-box">
       <div class="login-bg">
       <form class="login-form" @submit.prevent="handleLogin">

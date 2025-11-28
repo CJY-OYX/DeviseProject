@@ -26,11 +26,11 @@
         <!-- 第二行 -->
         <div class="d-flex jc-between px-2">
           <div class="d-flex aside-width">
-            <div class="react-left ml-4 react-l-s" :class="isHomePage ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
-              <span class="text" @click="goToHome">首页</span>
+            <div class="react-left ml-4 react-l-s" :class="isHomePage ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;cursor:pointer;" @click="goToHome">
+              <span class="text">首页</span>
             </div>
-            <div class="react-left ml-3 react-l-s" :class="(!isHomePage) ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
-              <span class="text" @click="goToEdit">编辑</span>
+            <div class="react-left ml-3 react-l-s" :class="(!isHomePage) ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;cursor:pointer;" @click="goToEdit">
+              <span class="text">编辑</span>
             </div>
           </div>
           <div class="d-flex aside-width">

@@ -1,5 +1,6 @@
 <template>
   <div class="register-container">
+    <dv-loading v-if="isSubmitting">正在提交...</dv-loading>
     <dv-border-box-1 class="register-border-box">
       <div class="register-form">
         <h2 class="form-title">用户注册</h2>
@@ -37,21 +38,27 @@ export default {
     return {
       username: '',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      isSubmitting: false
     }
   },
   methods: {
     handleRegister() {
+      if (this.isSubmitting) return
+      this.isSubmitting = true
       if (!this.username || !this.password || !this.confirmPassword) {
         alert('请填写所有字段');
+        this.isSubmitting = false;
         return;
       }
       if (this.username.length > 8) {
         alert('用户名最多8个字符');
+        this.isSubmitting = false;
         return;
       }
       if (this.password.length < 8 || this.password.length > 12) {
         alert('密码必须是8-12个字符');
+        this.isSubmitting = false;
         return;
       }
       const hasUpper = /[A-Z]/.test(this.password);
@@ -61,10 +68,12 @@ export default {
       const complexityCount = [hasUpper, hasLower, hasDigit, hasSymbol].filter(Boolean).length;
       if (complexityCount < 2) {
         alert('密码必须包含大写字母、小写字母、数字、符号中的至少两种');
+        this.isSubmitting = false;
         return;
       }
       if (this.password !== this.confirmPassword) {
         alert('两次输入的密码不一致');
+        this.isSubmitting = false;
         return;
       }
       axios.post('http://localhost:8000/myApp/register/', {
@@ -83,6 +92,9 @@ export default {
       .catch(error => {
         console.error('注册失败:', error);
         alert('注册失败，请重试');
+      })
+      .finally(() => {
+        this.isSubmitting = false;
       });
     }
   }

@@ -3,52 +3,37 @@
     <div class="bg themed-bg-home">
       <dv-loading v-if="loading">Loading...</dv-loading>
       <div v-else class="host-body">
-        <div class="d-flex jc-center">
-          <dv-decoration-10 class="dv-dec-10" />
-          <div class="d-flex jc-center">
-            <dv-decoration-8 class="dv-dec-8" :color="decorationColor" />
-            <div class="title">
-              <span class="title-text">大数据可视化平台</span>
-              <dv-decoration-5
-                class="dv-dec-6"
-                :reverse="true"
-
-              />
+        <div class="header-bar">
+          <div class="header-left">
+            <div class="nav-item" :class="isHomePage ? 'nav-active' : 'nav-inactive'" @click="goToHome">
+              <span class="text">首页</span>
             </div>
-            <dv-decoration-8
-              class="dv-dec-8"
-              :reverse="true"
-              :color="decorationColor"
-            />
-          </div>
-          <dv-decoration-10 class="dv-dec-10-s" />
-        </div>
-
-        <!-- 第二行 -->
-        <div class="d-flex jc-between px-2">
-          <div class="d-flex aside-width">
-            <div class="react-left ml-4 react-l-s" :class="isHomePage ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
-              <span class="text" @click="goToHome">首页</span>
-            </div>
-            <div class="react-left ml-3 react-l-s" :class="isEdit ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;">
-              <span class="text" @click="goToEdit">编辑</span>
+            <div class="nav-item" :class="isEdit ? 'nav-active' : 'nav-inactive'" @click="goToEdit">
+              <span class="text">编辑</span>
             </div>
           </div>
-          <div class="d-flex aside-width">
-            <div class="react-right bg-color-green mr-3" v-if="isLoggedIn">
-              <span class="text fw-b" @click="entryInfo">{{ username }}</span>
-              <button class="logout-btn ml-2" @click.stop="logout">登出</button>
+          <div class="header-title">
+            <span class="title-text">大数据可视化平台</span>
+          </div>
+          <div class="header-right">
+            <div class="user-block" v-if="isLoggedIn" ref="userBlock">
+              <span class="username fw-b" @click="toggleUserMenu">{{ username }}</span>
+              <div class="user-menu" v-if="showUserMenu">
+                <ul class="menu-list">
+                  <li class="menu-item" @click="handleUserMenu('detail')">进入详情页</li>
+                  <li class="menu-item" @click="handleUserMenu('logout')">登出</li>
+                </ul>
+              </div>
             </div>
-            <div class="react-right bg-color-blue mr-3" v-else>
-              <router-link to="/login" class="text fw-b">登录</router-link>
+            <div class="user-block" v-else>
+              <router-link to="/login" class="username fw-b">登录</router-link>
             </div>
-            <div class="react-right mr-4 react-l-s">
-              <span class="react-after"></span>
-              <span class="text">{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span>
+            <div class="date-block">
+              <span class="date-text">{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span>
             </div>
           </div>
         </div>
-
+      <div>
         <div class="body-box">
           <!-- 第三行数据 -->
           <div class="content-box">
@@ -92,6 +77,7 @@
           </div>
         </div>
       </div>
+      </div>
     </div>
   </div>
 </template>
@@ -123,6 +109,8 @@ export default {
       isHomePage: this.$route.path === '/',
       isEdit: this.$route.path === '/user-car-detail-edit',
       username: localStorage.getItem('username') || ''
+    ,
+      showUserMenu: false
     };
   },
   components: {
@@ -145,12 +133,29 @@ export default {
     this.$watch('$route', (to) => {
       this.isHomePage = to.path === '/';
     });
+    document.addEventListener('click', this.handleDocumentClick);
   },
   beforeDestroy() {
     clearInterval(this.timing);
     window.removeEventListener('storage', this.handleStorageChange);
+    document.removeEventListener('click', this.handleDocumentClick);
   },
   methods: {
+    toggleUserMenu() {
+      this.showUserMenu = !this.showUserMenu;
+    },
+    handleDocumentClick(e) {
+      const el = this.$refs.userBlock;
+      if (el && !el.contains(e.target)) this.showUserMenu = false;
+    },
+    handleUserMenu(action) {
+      if (action === 'detail') {
+        this.entryInfo();
+      } else if (action === 'logout') {
+        this.logout();
+      }
+      this.showUserMenu = false;
+    },
     handleStorageChange(event) {
       if (event.key === 'isLoggedIn') {
         this.isLoggedIn = event.newValue === 'true';
