@@ -1,22 +1,37 @@
 <template>
   <div class="info-card">
-    <dv-border-box-6 class="info-card-border" style="width: 100%; min-width: 600px;">
-      <!-- <h3 class="info-title" style="text-align: center;">车辆详细信息</h3> -->
+    <dv-border-box-11 title="详细参数" class="info-card-border">
       <div v-if="carInfo" class="data-container">
-          <div class="data-item" v-for="(value, key) in mergedCarInfo" :key="key">
-              <template v-if="key === 'configSeparator'">
-                <div class="configuration-separator">{{ value }}</div>
-              </template>
-              <template v-else>
-                <span class="data-label" :data-config="isConfigField(key)">{{ formatKey(key) }}:</span>
-                <span class="data-value">{{ value }}</span>
-              </template>
-            </div>
+        <!-- 基础参数区域 -->
+        <div class="section-title">
+          <dv-decoration-3 style="width:200px;height:30px;" />
+          <span>基础参数</span>
         </div>
-      <div v-else class="no-data">
-        <p>加载车辆信息中...</p>
+        <div class="info-grid">
+          <div class="info-item" v-for="(value, key) in filteredCarInfo" :key="key">
+            <div class="item-label">{{ formatKey(key) }}</div>
+            <div class="item-value">{{ value }}</div>
+            <div class="item-bg"></div>
+          </div>
+        </div>
+
+        <!-- 配置详情区域 -->
+        <div class="section-title" v-if="hasConfig">
+          <dv-decoration-3 style="width:200px;height:30px;" />
+          <span>车辆配置</span>
+        </div>
+        <div class="config-grid" v-if="hasConfig">
+           <div class="config-item" v-for="(value, key) in parsedConfiguration" :key="key">
+             <div class="config-label">{{ key }}</div>
+             <div class="config-value">{{ value }}</div>
+           </div>
+        </div>
       </div>
-    </dv-border-box-6>
+      
+      <div v-else class="no-data">
+        <dv-loading>加载车辆信息中...</dv-loading>
+      </div>
+    </dv-border-box-11>
   </div>
 </template>
 
@@ -62,34 +77,14 @@ export default {
         return { '配置信息': this.userCarDetail.configuration }
       }
     },
-    mergedCarInfo() {
-      // 合并车辆基本信息和配置信息
-      const basicInfo = this.filteredCarInfo
-      const configInfo = this.parsedConfiguration
-      
-      // 添加配置信息的标记
-      if (Object.keys(configInfo).length > 0) {
-        basicInfo['configSeparator'] = '车辆配置'
-        Object.assign(basicInfo, configInfo)
-      }
-      
-      return basicInfo
+    hasConfig() {
+      return Object.keys(this.parsedConfiguration).length > 0;
     }
   },
   methods: {
-    isConfigField(key) {
-      // 判断是否为配置字段
-      const basicFields = Object.keys(this.filteredCarInfo)
-      return !basicFields.includes(key) && key !== 'configSeparator'
-    },
     formatKey(key) {
       // 确保key是字符串类型
       key = String(key);
-      
-      // 特殊字段处理
-      if (key === 'configSeparator') {
-        return ''; // 配置分隔符不需要标签
-      }
       
       // 字段名到注释的映射
       const fieldComments = {
@@ -119,44 +114,150 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../assets/scss/car-info.scss';
-
 .info-card {
-  min-width: 600px; /* 增加最小宽度 */
-  padding: 20px; /* 增加内边距 */
-}
-
-.configuration-separator {
   width: 100%;
-  color: #409EFF;
-  font-size: 20px; /* 增大分隔符字体 */
-  margin: 25px 0 15px; /* 增加间距 */
-  padding-top: 20px;
-  border-top: 1px solid #409EFF;
-  font-weight: bold;
+  height: 100%;
+  // padding: 20px;
 }
 
-.data-label {
-  font-size: 20px; /* 增大标签字体大小 */
-  margin-right: 30px; /* 增加标签与数据之间的间距 */
-  min-width: 180px; /* 固定标签宽度确保对齐 */
-  &[data-config="true"] {
-    color: #409EFF;
-  }
-}
-
-.data-value {
-  font-size: 20px; /* 增大数据字体大小 */
-}
-
-.data-item {
-  margin-bottom: 5px; /* 增加项目之间的间距 */
-  padding: 10px; /* 增加项目内边距 */
-  display: flex; /* 使用flex布局 */
-  align-items: center; /* 垂直居中对齐 */
+.info-card-border {
+  width: 100%;
+  height: 100%;
+  padding: 60px 20px 20px 20px; // 留出标题空间
+  box-sizing: border-box;
 }
 
 .data-container {
-  padding: 15px; /* 增加容器内边距 */
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 10px;
+  
+  /* Scrollbar styling */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 209, 255, 0.3);
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+  
+  span {
+    position: absolute;
+    left: 20px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 0 0 10px #00d1ff;
+  }
+}
+
+/* 基础参数网格布局 */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.info-item {
+  position: relative;
+  background: rgba(6, 30, 93, 0.4);
+  border: 1px solid rgba(0, 209, 255, 0.2);
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 4px;
+  transition: all 0.3s;
+  
+  &:hover {
+    background: rgba(6, 30, 93, 0.7);
+    border-color: rgba(0, 209, 255, 0.6);
+    box-shadow: 0 0 15px rgba(0, 209, 255, 0.2);
+    
+    .item-label {
+      color: #fff;
+    }
+  }
+  
+  .item-label {
+    color: #8cc5ff;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .item-value {
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: right;
+  }
+  
+  // 装饰角
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 10px; height: 10px;
+    border-top: 2px solid #00d1ff;
+    border-left: 2px solid #00d1ff;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 10px; height: 10px;
+    border-bottom: 2px solid #00d1ff;
+    border-right: 2px solid #00d1ff;
+  }
+}
+
+/* 配置详情网格布局 */
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.config-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: flex-start;
+  border-left: 3px solid #409EFF;
+  
+  .config-label {
+    min-width: 150px;
+    color: #409EFF;
+    font-size: 16px;
+    font-weight: bold;
+    margin-right: 20px;
+  }
+  
+  .config-value {
+    color: #eee;
+    font-size: 16px;
+    line-height: 1.5;
+    flex: 1;
+  }
+}
+
+.no-data {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
 }
 </style>

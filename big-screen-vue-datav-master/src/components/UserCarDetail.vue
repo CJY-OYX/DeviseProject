@@ -140,7 +140,9 @@ export default {
 
 <style lang="scss" scoped>
 .info-card-border {
-  height: 300px;
+  min-height: 280px;
+  height: auto;
+  padding-bottom: 20px;
 }
 .calc-row {
   display: flex;

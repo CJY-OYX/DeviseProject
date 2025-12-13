@@ -23,7 +23,7 @@
             <div>保修时间</div>
             <div>上市时间</div>
           </li>
-          <li v-for="(car, index) in carData" :key="index + '-' + car.rank" @click="openModal(car)" style="cursor:pointer">
+          <li v-for="(car, index) in carData" :key="index + '-' + car.rank" @click="openRankModal(car)" style="cursor:pointer">
             <div>{{ car.rank }}</div>
             <div class="list_img"><img :src="car.carImg" style="height: 100%;width: 100%" alt=""></div>
             <div class="list_info">
@@ -68,6 +68,8 @@
           </div>
         </div>
       </div>
+      
+
     </div>
   </div>
 </template>
@@ -98,6 +100,10 @@ export default {
     closeModal() {
       this.showModal = false
       this.selectedCar = {}
+    },
+    openRankModal(car) {
+      // 通过事件将汽车数据传递给父组件(index.vue)
+      this.$emit('car-selected', car)
     }
   }
 };

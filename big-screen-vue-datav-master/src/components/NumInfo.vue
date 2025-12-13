@@ -1,7 +1,7 @@
 <template>
   <div class="digital-flop-container">
     <dv-border-box-11 class="dv-border-box" title="新车指导价">
-      <dv-digital-flop :config="config" style="width:auto;height:200px;" />
+      <dv-digital-flop :config="config" style="width:auto;height:100px;" />
     </dv-border-box-11>
   </div>
 </template>

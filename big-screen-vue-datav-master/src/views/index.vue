@@ -17,14 +17,14 @@
               <span class="username fw-b" @click="toggleUserMenu">{{ username }}</span>
               <div class="user-menu" v-if="showUserMenu">
                 <ul class="menu-list">
-                  <li class="menu-item" @click="handleUserMenu('detail')">进入详情页</li>
+                  <li class="menu-item" @click="handleUserMenu('detail')">我的车辆</li>
                   <li class="menu-item" @click="handleUserMenu('edit')">编辑</li>
                   <li class="menu-item" @click="handleUserMenu('logout')">登出</li>
                 </ul>
               </div>
             </div>
             <div class="user-block" v-else>
-              <router-link to="/login" class="username fw-b">登录</router-link>
+              <span class="username fw-b" @click="openLoginModal" style="cursor:pointer">登录</span>
             </div>
             <div class="date-block">
               <span class="date-text">{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span>
@@ -66,7 +66,7 @@
           <!-- 第四行数据 -->
           <div class="bottom-box">
             <dv-border-box-13>
-              <bottomRight />
+              <bottomRight @car-selected="openCarRankModal" />
             </dv-border-box-13>
             <dv-border-box-12>
               <bottomLeft />
@@ -77,10 +77,41 @@
       </div>
       </div>
     </div>
+    
+    <!-- 全屏汽车排行榜详情 -->
+    <car-rank-modal 
+      :visible.sync="showCarRankModal" 
+      :car="selectedCar" 
+    />
+    
+    <!-- 登录浮窗 -->
+    <login-modal 
+      :visible.sync="showLoginModal" 
+      @login-success="handleLoginSuccess"
+      @switch-to-register="handleSwitchToRegister"
+    />
+
+    <!-- 注册浮窗 -->
+    <register-modal 
+      :visible.sync="showRegisterModal" 
+      @switch-to-login="handleSwitchToLogin"
+    />
+
+    <!-- 编辑浮窗 -->
+    <edit-modal 
+      :visible.sync="showEditModal"
+      @edit-success="handleEditSuccess"
+    />
+
+    <!-- 用户详情浮窗 -->
+    <user-detail-modal 
+      :visible.sync="showUserDetailModal"
+    />
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import drawMixin from "../utils/drawMixin";
 import { formatTime } from '../utils/index.js'
 import centerLeft1 from './centerLeft1'
@@ -90,7 +121,11 @@ import centerRight2 from './centerRight2'
 import center from './center'
 import bottomLeft from './bottomLeft'
 import bottomRight from './bottomRight'
-import axios from "axios";
+import CarRankModal from '../components/CarRankModal'
+import LoginModal from '../components/LoginModal'
+import RegisterModal from '../components/RegisterModal'
+import EditModal from '../components/EditModal'
+import UserDetailModal from '../components/UserDetailModal'
 
 export default {
   mixins: [ drawMixin ],
@@ -107,7 +142,13 @@ export default {
       isHomePage: this.$route.path === '/',
       username: localStorage.getItem('username') || ''
     ,
-      showUserMenu: false
+      showUserMenu: false,
+      showCarRankModal: false,
+      selectedCar: {},
+      showLoginModal: false,
+      showRegisterModal: false,
+      showEditModal: false,
+      showUserDetailModal: false
     };
   },
   components: {
@@ -117,7 +158,12 @@ export default {
     centerRight2,
     center,
     bottomLeft,
-    bottomRight
+    bottomRight,
+    CarRankModal,
+    LoginModal,
+    RegisterModal,
+    EditModal,
+    UserDetailModal
   },
   mounted() {
     this.timeFn();
@@ -137,6 +183,9 @@ export default {
     window.removeEventListener('storage', this.handleStorageChange);
     document.removeEventListener('click', this.handleDocumentClick);
   },
+  computed: {
+    ...mapState(['userData'])
+  },
   methods: {
     toggleUserMenu() {
       this.showUserMenu = !this.showUserMenu;
@@ -147,7 +196,7 @@ export default {
     },
     handleUserMenu(action) {
       if (action === 'detail') {
-        this.entryInfo();
+        this.showUserDetailModal = true;
       } else if (action === 'edit') {
         this.goToEdit();
       } else if (action === 'logout') {
@@ -175,24 +224,6 @@ export default {
         this.loading = false;
       }, 500);
     },
-    entryInfo(){
-      axios.post('http://localhost:8000/myApp/entry-user-info/', {username:this.username})
-        .then(res => {
-          if (res.data.success){
-            sessionStorage.setItem('userData', JSON.stringify(res.data));
-            sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
-            sessionStorage.setItem('userCarInfo', JSON.stringify(res.data.usercarinfo));
-            this.$router.push({ path: '/user-detail' });
-          }
-          else{
-            alert(res.data.message || '请求失败');
-          }
-        })
-        .catch(error => {
-          console.error('Request error:', error);
-          alert('网络请求错误: ' + error.message);
-        });
-    },
     goToHome() {
       if (this.$route.path === '/') return;
       this.$router.push('/');
@@ -200,38 +231,20 @@ export default {
     goToEdit() {
       if (!this.isLoggedIn) {
         alert('请先登录');
-        if (this.$route.path !== '/login') this.$router.push('/login');
+        this.openLoginModal();
         return;
       }
       if (!this.username) {
         alert('未找到用户名，请先登录');
-        if (this.$route.path !== '/login') this.$router.push('/login');
+        this.openLoginModal();
         return;
       }
-      axios.post('http://localhost:8000/myApp/entry-user-info/', {username: this.username})
-        .then(res => {
-          if (res.data.success) {
-            const userId = res.data.userinfo?.id;
-            const carId = res.data.usercarinfo?.id;
-            if (!userId || !carId) {
-              alert('未找到用户或车辆信息，请先完善用户详情');
-              if (this.$route.path !== '/user-detail') this.$router.push('/user-detail');
-              return;
-            }
-            sessionStorage.setItem('userData', JSON.stringify(res.data));
-            sessionStorage.setItem('userInfo', JSON.stringify(res.data.userinfo));
-            sessionStorage.setItem('userCarInfo', JSON.stringify(res.data.usercarinfo));
-            if (this.$route.path !== '/user-car-detail-edit') {
-              this.$router.push({ path: '/user-car-detail-edit' });
-            }
-          } else {
-            alert(res.data.message || '获取用户信息失败');
-          }
-        })
-        .catch(error => {
-          console.error('获取用户信息错误:', error);
-          alert('网络请求错误: ' + error.message);
-        });
+      // 直接打开编辑浮窗，数据由浮窗内部获取
+      this.showEditModal = true;
+    },
+    handleEditSuccess() {
+      // 编辑成功后，重新获取用户数据更新页面
+      this.fetchUserData();
     },
     logout() {
       // 清除本地存储中的登录状态
@@ -241,6 +254,30 @@ export default {
       
       // 跳转到登录页面
       this.$router.push('/login');
+    },
+    openCarRankModal(car) {
+      this.selectedCar = car || {}
+      this.showCarRankModal = true
+    },
+    openLoginModal() {
+      this.showLoginModal = true
+    },
+    handleSwitchToRegister() {
+      this.showLoginModal = false
+      setTimeout(() => {
+        this.showRegisterModal = true
+      }, 300) // 等待登录框动画结束
+    },
+    handleSwitchToLogin() {
+      this.showRegisterModal = false
+      setTimeout(() => {
+        this.showLoginModal = true
+      }, 300) // 等待注册框动画结束
+    },
+    handleLoginSuccess(user) {
+      this.isLoggedIn = true
+      this.username = user.username
+      this.fetchUserData() // 获取用户信息
     }
   }
 };

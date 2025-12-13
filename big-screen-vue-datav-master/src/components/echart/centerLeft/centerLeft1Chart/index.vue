@@ -15,6 +15,7 @@ export default {
   data () {
     return {
       currentIndex: 0,
+      timer: null,
       cdata: {
         xData: ["data1", "data2", "data3", "data4", "data5", "data6"],
         seriesData: [
@@ -39,6 +40,12 @@ export default {
     this.initChart()
     this.loopAnimation()
   },
+  beforeDestroy() {
+    if (this.timer) {
+      clearInterval(this.timer)
+      this.timer = null
+    }
+  },
   methods: {
     initChart(){
       this.myChart = this.$echarts.init(this.$refs.chart)
@@ -62,6 +69,7 @@ export default {
           },
           calculable: true,
           legend: {
+            show: true,
             orient: "horizontal",
             icon: "circle",
             bottom: 0,
@@ -77,15 +85,28 @@ export default {
               type: "pie",
               radius: [20, 80],
               roseType: "area",
-              center: ["50%", "40%"],
+              center: ["50%", "35%"],
               data: this.cdata.seriesData,
-              emphasis:{
-                itemStyle:{
+              label: {
+                normal: {
+                  show: true
+                }
+              },
+              labelLine: {
+                normal: {
+                  show: true
+                }
+              },
+              emphasis: {
+                itemStyle: {
                   shadowBlur: 10,
                   shadowOffsetX: 0,
-                  lable:{
-                    show: true,
-                  }
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                },
+                label: {
+                  show: true,
+                  fontSize: 20,
+                  fontWeight: 'bold'
                 }
               }
             }
@@ -95,7 +116,10 @@ export default {
     },
     loopAnimation(){
       if (!this.cdata.seriesData || this.cdata.seriesData.length === 0) return
-      setInterval(() => {
+      if (this.timer) {
+        clearInterval(this.timer)
+      }
+      this.timer = setInterval(() => {
         this.myChart.dispatchAction({
           type: 'downplay',
           seriesIndex: 0,

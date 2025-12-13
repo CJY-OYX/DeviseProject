@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="gradient-bg fade-in">
+  <div id="app" class="bg-image-cover fade-in">
     <router-view />
   </div>
 </template>

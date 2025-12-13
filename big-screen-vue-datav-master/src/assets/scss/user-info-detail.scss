@@ -72,6 +72,28 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      padding: 0 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .nav-item { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; border-radius: 8px; cursor: pointer; transition: box-shadow 0.25s ease, transform 0.25s ease; }
+    .nav-item .text { font-size: 18px; }
+    .header-title { flex: 1; text-align: center; }
+    .header-title .title-text { font-size: 22px; letter-spacing: 0.6px; color: #eaf7ff; font-weight: 600; text-shadow: 0 0 8px rgba(0, 209, 255, 0.25); }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .user-block { position: relative; }
+    .user-block .username { display: inline-flex; align-items: center; background-color: #2ecc71; color: white; padding: 6px 14px; border-radius: 6px; font-size: 14px; text-decoration: none; }
+    .user-menu { position: absolute; top: 100%; right: 0; background-color: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; min-width: 140px; z-index: 9999; }
+    .menu-list { list-style: none; margin: 0; padding: 6px 0; }
+    .menu-item { padding: 8px 14px; color: #eaf7ff; cursor: pointer; }
+    .menu-item:hover { background-color: rgba(0, 209, 255, 0.15); color: #0b0f1a; }
 
     .dv-dec-6 {
       position: absolute;
@@ -169,26 +191,8 @@
       }
     }
 
-    .nav-active {
-      background-color: #00D1FF;
-      border: 1px solid #00D1FF;
-      box-shadow: 0 0 12px rgba(0, 209, 255, 0.45);
-      transform: skewX(45deg) scale(1.02);
-      position: relative;
-    }
-    .nav-active::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 10px;
-      box-shadow: 0 0 18px rgba(0, 209, 255, 0.55);
-      animation: activePulse 2s ease-in-out infinite;
-      pointer-events: none;
-    }
-    .nav-inactive {
-      background-color: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
+    .nav-active { background-color: #00D1FF; border-color: #00D1FF; box-shadow: 0 0 12px rgba(0, 209, 255, 0.45); }
+    .nav-inactive { background-color: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.12); }
     @keyframes activePulse {
       0% { box-shadow: 0 0 0 rgba(0, 209, 255, 0); }
       50% { box-shadow: 0 0 18px rgba(0, 209, 255, 0.55); }

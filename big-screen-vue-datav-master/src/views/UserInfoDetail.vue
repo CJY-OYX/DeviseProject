@@ -3,43 +3,31 @@
     <div class="bg bg-image-cover">
       <dv-loading v-if="loading">Loading...</dv-loading>
       <div v-else class="host-body">
-        <div class="d-flex jc-center">
-          <dv-decoration-10 class="dv-dec-10" />
-          <div class="d-flex jc-center">
-            <dv-decoration-8 class="dv-dec-8" :color="decorationColor" />
-            <div class="title">
-              <span class="title-text">用户详情信息</span>
-              <dv-decoration-5
-                class="dv-dec-6"
-                :reverse="true"
-              />
-            </div>
-            <dv-decoration-8
-              class="dv-dec-8"
-              :reverse="true"
-              :color="decorationColor"
-            />
-          </div>
-          <dv-decoration-10 class="dv-dec-10-s" />
-        </div>
-
-        <!-- 第二行 -->
-        <div class="d-flex jc-between px-2">
-          <div class="d-flex aside-width">
-            <div class="react-left ml-4 react-l-s" :class="isHomePage ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;cursor:pointer;" @click="goToHome">
+        <div class="header-bar">
+          <div class="header-left">
+            <div class="nav-item" :class="isHomePage ? 'nav-active' : 'nav-inactive'" @click="goToHome">
               <span class="text">首页</span>
             </div>
-            <div class="react-left ml-3 react-l-s" :class="isEdit ? 'nav-active' : 'nav-inactive'" style="display:flex;justify-content:center;align-items:center;cursor:pointer;" @click="goToEdit">
-              <span class="text">编辑</span>
-            </div>
           </div>
-          <div class="d-flex aside-width">
-            <div class="react-right bg-color-green mr-3" v-if="isLoggedIn">
-              <span class="text fw-b">{{ username }}</span>
+          <div class="header-title">
+            <span class="title-text">用户详情信息</span>
+          </div>
+          <div class="header-right">
+            <div class="user-block" v-if="isLoggedIn" ref="userBlock">
+              <span class="username fw-b" @click="toggleUserMenu">{{ username }}</span>
+              <div class="user-menu" v-if="showUserMenu">
+                <ul class="menu-list">
+                  <li class="menu-item" @click="handleUserMenu('detail')">进入详情页</li>
+                  <li class="menu-item" @click="handleUserMenu('edit')">编辑</li>
+                  <li class="menu-item" @click="handleUserMenu('logout')">登出</li>
+                </ul>
+              </div>
             </div>
-            <div class="react-right mr-4 react-l-s">
-              <span class="react-after"></span>
-              <span class="text">{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span>
+            <div class="user-block" v-else>
+              <router-link to="/login" class="username fw-b">登录</router-link>
+            </div>
+            <div class="date-block">
+              <span class="date-text">{{ dateYear }} {{ dateWeek }} {{ dateDay }}</span>
             </div>
           </div>
         </div>
@@ -103,7 +91,8 @@ export default {
       username: localStorage.getItem('username') || '',
       isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
       isHomePage: this.$route.path === '/' ,
-      isEdit: this.$route.path === '/user-car-detail-edit'
+      isEdit: this.$route.path === '/user-car-detail-edit',
+      showUserMenu: false
     }
   },
   computed: {
@@ -159,12 +148,36 @@ export default {
         this.fetchUserData();
       }
     });
+    document.addEventListener('click', this.handleDocumentClick);
   },
   beforeDestroy() {
     clearInterval(this.timing);
     window.removeEventListener('storage', this.handleStorageChange);
+    document.removeEventListener('click', this.handleDocumentClick);
   },
   methods: {
+    toggleUserMenu() {
+      this.showUserMenu = !this.showUserMenu;
+    },
+    handleDocumentClick(e) {
+      const el = this.$refs.userBlock;
+      if (el && !el.contains(e.target)) this.showUserMenu = false;
+    },
+    handleUserMenu(action) {
+      if (action === 'detail') {
+        if (this.$route.path !== '/user-detail') {
+          this.$router.push({ name: 'user-detail' });
+        }
+      } else if (action === 'edit') {
+        this.goToEdit();
+      } else if (action === 'logout') {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        localStorage.removeItem('userRole');
+        this.$router.push('/login');
+      }
+      this.showUserMenu = false;
+    },
     goToEdit() {
         // 根据用户名获取用户和车辆信息
         axios.post('http://localhost:8000/myApp/entry-user-info/', {username: this.username})
