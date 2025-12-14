@@ -104,8 +104,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": 'carData',
-        "USER": 'admin',
-        "PASSWORD": '123456',
+        "USER": 'cjy',
+        "PASSWORD": 'oyx1964043179',
         "HOST": 'localhost',
         "PORT": 3306,
         "CONN_MAX_AGE": 0,  # 不保持连接池，每次操作后关闭连接
