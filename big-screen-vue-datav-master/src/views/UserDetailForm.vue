@@ -93,7 +93,7 @@ export default {
       }
 
       // 发送表单数据到后端API
-      axios.post('http://localhost:18000/myApp/save-user-car-detail/', {
+      axios.post('http://localhost:18000/myApp/save_user_car_detail/', {
         userId: this.userId,
         carName: this.carName,
         carModel: this.carModel,
