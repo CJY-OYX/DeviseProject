@@ -149,7 +149,7 @@ export default {
         return;
       }
       this.loading = true;
-      axios.post('http://localhost:8000/myApp/entry-user-info/', { username: this.username })
+      axios.post('http://localhost:18000/myApp/entry-user-info/', { username: this.username })
         .then(res => {
           if (res.data && res.data.success) {
             this.userInfo = res.data.userinfo || null;

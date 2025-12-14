@@ -3,7 +3,7 @@ import json
 
 class CarDataUser(HttpUser):
     wait_time = between(1, 3)
-    host = "http://127.0.0.1:8000"
+    host = "http://127.0.0.1:18000"
 
     @task(5)
     def get_users_list(self):

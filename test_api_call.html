@@ -41,7 +41,7 @@
         async function testDirectApiCall() {
             log('开始直接调用后端API...');
             try {
-                const response = await axios.post('http://127.0.0.1:8000/myApp/executeDataUpdate/', {
+                const response = await axios.post('http://127.0.0.1:18000/myApp/executeDataUpdate/', {
                     updateType: 'full'
                 }, {
                     timeout: 40000,
@@ -67,7 +67,7 @@
             try {
                 // 创建与前端相同的service配置
                 const service = axios.create({
-                    baseURL: 'http://127.0.0.1:8000/',
+                    baseURL: 'http://127.0.0.1:18000/',
                     timeout: 40000,
                     withCredentials: true
                 });

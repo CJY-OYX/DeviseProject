@@ -60,7 +60,7 @@ export default {
         return
       }
 
-      axios.get('http://localhost:8000/myApp/search-cars/', {
+      axios.get('http://localhost:18000/myApp/search-cars/', {
         params: {
           name: this.carName
         }
@@ -93,7 +93,7 @@ export default {
       }
 
       // 发送表单数据到后端API
-      axios.post('http://localhost:8000/myApp/save-user-car-detail/', {
+      axios.post('http://localhost:18000/myApp/save-user-car-detail/', {
         userId: this.userId,
         carName: this.carName,
         carModel: this.carModel,

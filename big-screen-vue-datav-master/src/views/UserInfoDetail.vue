@@ -180,7 +180,7 @@ export default {
     },
     goToEdit() {
         // 根据用户名获取用户和车辆信息
-        axios.post('http://localhost:8000/myApp/entry-user-info/', {username: this.username})
+        axios.post('http://localhost:18000/myApp/entry-user-info/', {username: this.username})
           .then(res => {
             if (res.data.success) {
               const userId = res.data.userinfo?.id;
@@ -232,7 +232,7 @@ export default {
         this.loading = false;
         return;
       }
-      axios.post('http://localhost:8000/myApp/entry-user-info/', { username: this.username })
+      axios.post('http://localhost:18000/myApp/entry-user-info/', { username: this.username })
         .then(res => {
           if (res.data && res.data.success) {
             this.userInfo = res.data.userinfo || null;

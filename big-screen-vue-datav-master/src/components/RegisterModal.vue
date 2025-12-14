@@ -164,7 +164,7 @@ export default {
         return;
       }
 
-      axios.post('http://localhost:8000/myApp/register/', {
+      axios.post('http://localhost:18000/myApp/register/', {
         username: this.username,
         password: this.password,
         confirmPassword: this.confirmPassword

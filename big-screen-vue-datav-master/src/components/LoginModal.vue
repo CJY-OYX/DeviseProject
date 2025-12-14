@@ -133,7 +133,7 @@ export default {
       }
 
       axios.post(
-        'http://localhost:8000/myApp/login/',
+        'http://localhost:18000/myApp/login/',
         { username: this.username, password: this.password }
       )
       .then(res => {
