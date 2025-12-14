@@ -54,8 +54,6 @@ MIDDLEWARE = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
     "http://localhost:18080",
     "http://127.0.0.1:18080",
 ]
@@ -65,8 +63,6 @@ CSRF_TRUSTED_ORIGINS = [
 # CORS_ALLOW_ALL_ORIGINS = True
 # 明确添加允许的来源
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
     "http://localhost:18080",
     "http://127.0.0.1:18080",
 ]
