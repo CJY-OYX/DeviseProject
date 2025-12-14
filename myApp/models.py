@@ -16,7 +16,7 @@ class carInfo(models.Model):
     insure = models.CharField('保修时间', max_length=255, default='')
     creteTime = models.DateTimeField('创建时间', auto_now_add=True)
     class Meta:
-        db_table = 'carInfo'
+        db_table = 'carinfo'
 
 # 用户
 class User(models.Model):

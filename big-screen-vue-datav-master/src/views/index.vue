@@ -252,8 +252,15 @@ export default {
       localStorage.removeItem('username');
       localStorage.removeItem('userRole');
       
-      // 跳转到登录页面
-      this.$router.push('/login');
+      // 更新页面状态
+      this.isLoggedIn = false;
+      this.username = '';
+      this.showUserMenu = false;
+      
+      // 如果当前不是首页，则跳转回首页
+      if (this.$route.path !== '/') {
+        this.$router.push('/');
+      }
     },
     openCarRankModal(car) {
       this.selectedCar = car || {}
@@ -278,6 +285,10 @@ export default {
       this.isLoggedIn = true
       this.username = user.username
       this.fetchUserData() // 获取用户信息
+    },
+    fetchUserData() {
+      // 占位函数，防止报错
+      console.log('Fetching user data for:', this.username);
     }
   }
 };

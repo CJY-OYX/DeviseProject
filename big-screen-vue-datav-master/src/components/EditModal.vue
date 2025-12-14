@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import service from '@/api/index'
 
 export default {
   name: 'EditModal',
@@ -126,7 +126,7 @@ export default {
     fetchCarDetail() {
       if (!this.username) return
 
-      axios.post('http://localhost:18000/myApp/if_user_car_detail/', {
+      service.post('/myApp/if_user_car_detail/', {
         username: this.username
       })
       .then(response => {
@@ -158,7 +158,7 @@ export default {
         this.searchResults = [];
         return;
       }
-      axios.post('http://localhost:18000/myApp/search_cars/', {
+      service.post('/myApp/search_cars/', {
         query: this.carName
       })
       .then(response => {
@@ -179,7 +179,7 @@ export default {
       if (this.isSubmitting) return
       this.isSubmitting = true
 
-      axios.post('http://localhost:18000/myApp/save_user_car_detail/', {
+      service.post('/myApp/save_user_car_detail/', {
         userId: this.userId,
         carName: this.carName,
         carModel: this.carModel,

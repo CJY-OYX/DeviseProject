@@ -45,7 +45,6 @@
 </template>
 
 <script>
-import axios from "axios";
 /* eslint-disable no-unused-vars */
 import CarImg from '../components/CarImg.vue'
 import CarInfo from '../components/CarInfo.vue'
@@ -149,7 +148,7 @@ export default {
         return;
       }
       this.loading = true;
-      axios.post('http://localhost:18000/myApp/entry-user-info/', { username: this.username })
+      this.$http.post('/myApp/entry-user-info/', { username: this.username })
         .then(res => {
           if (res.data && res.data.success) {
             this.userInfo = res.data.userinfo || null;

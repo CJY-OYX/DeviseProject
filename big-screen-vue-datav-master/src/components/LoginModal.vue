@@ -58,7 +58,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import service from '@/api/index'
 
 export default {
   name: 'LoginModal',
@@ -132,8 +132,8 @@ export default {
         return
       }
 
-      axios.post(
-        'http://localhost:18000/myApp/login/',
+      service.post(
+        '/myApp/login/',
         { username: this.username, password: this.password }
       )
       .then(res => {
@@ -149,6 +149,14 @@ export default {
           localStorage.setItem('isLoggedIn', 'true')
           localStorage.setItem('username', this.username)
           
+          // 如果是管理员，设置角色并跳转到管理后台
+          if (this.username === 'admin') {
+            localStorage.setItem('userRole', 'admin')
+            this.$router.push('/admin')
+          } else {
+            localStorage.setItem('userRole', 'user')
+          }
+
           this.$emit('login-success', {
             username: this.username
           })

@@ -106,7 +106,7 @@ DATABASES = {
         "NAME": 'carData',
         "USER": 'cjy',
         "PASSWORD": 'oyx1964043179',
-        "HOST": 'localhost',
+        "HOST": '124.71.110.183',
         "PORT": 3306,
         "CONN_MAX_AGE": 0,  # 不保持连接池，每次操作后关闭连接
         "OPTIONS": {

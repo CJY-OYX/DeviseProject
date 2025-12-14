@@ -32,10 +32,9 @@
 <script>
 import Vue from 'vue'
 import DataV from '@jiaminghi/data-view'
-import axios from 'axios'
+import service from '@/api/index'
 
 Vue.use(DataV)
-axios.defaults.withCredentials = true
 
 export default {
   data() {
@@ -48,33 +47,43 @@ export default {
   },
   methods: {
     handleLogin () {
-  if (this.isSubmitting) return
-  this.isSubmitting = true
-  if (!this.username || !this.password) {
-    alert('请输入用户名和密码')
-    this.isSubmitting = false
-    return
-  }
-  axios.post(
-    'http://localhost:18000/myApp/login/',
-    { username: this.username, password: this.password }
-  )
-  .then(res => {
-    if (res.data.success) {
-      alert(res.data.message)
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', this.username);
-      const redirect = this.$route.query.redirect;
-      const target = redirect && redirect !== '/login' ? redirect : '/';
-      this.$router.replace(target);
-    } else {
-      alert(res.data.message)
+      if (this.isSubmitting) return
+      this.isSubmitting = true
+      if (!this.username || !this.password) {
+        alert('请输入用户名和密码')
+        this.isSubmitting = false
+        return
+      }
+      service.post(
+        '/myApp/login/',
+        { username: this.username, password: this.password }
+      )
+      .then(res => {
+        if (res.data.success) {
+          alert(res.data.message)
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('username', this.username);
+          
+          // 如果是管理员，设置角色并跳转到管理后台
+          if (this.username === 'admin') {
+            localStorage.setItem('userRole', 'admin')
+            this.$router.push('/admin')
+            return
+          } else {
+            localStorage.setItem('userRole', 'user')
+          }
+          
+          const redirect = this.$route.query.redirect;
+          const target = redirect && redirect !== '/login' ? redirect : '/';
+          this.$router.replace(target);
+        } else {
+          alert(res.data.message)
+        }
+      })
+      .finally(() => {
+        this.isSubmitting = false
+      })
     }
-  })
-  .finally(() => {
-    this.isSubmitting = false
-  })
-}
   }
 }
 </script>

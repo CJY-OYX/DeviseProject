@@ -54,7 +54,7 @@
 <script>
 import drawMixin from "../utils/drawMixin";
 import { formatTime } from '../utils/index.js'
-import axios from "axios";
+import service from '@/api/index'
 /* eslint-disable no-unused-vars */
 import CarImg from '../components/CarImg.vue'
 import CarInfo from '../components/CarInfo.vue'
@@ -174,13 +174,17 @@ export default {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('username');
         localStorage.removeItem('userRole');
-        this.$router.push('/login');
+        
+        // 如果当前不是首页，则跳转回首页
+        if (this.$route.path !== '/') {
+          this.$router.push('/');
+        }
       }
       this.showUserMenu = false;
     },
     goToEdit() {
         // 根据用户名获取用户和车辆信息
-        axios.post('http://localhost:18000/myApp/entry-user-info/', {username: this.username})
+        service.post('/myApp/entry-user-info/', {username: this.username})
           .then(res => {
             if (res.data.success) {
               const userId = res.data.userinfo?.id;
@@ -232,7 +236,7 @@ export default {
         this.loading = false;
         return;
       }
-      axios.post('http://localhost:18000/myApp/entry-user-info/', { username: this.username })
+      service.post('/myApp/entry-user-info/', { username: this.username })
         .then(res => {
           if (res.data && res.data.success) {
             this.userInfo = res.data.userinfo || null;

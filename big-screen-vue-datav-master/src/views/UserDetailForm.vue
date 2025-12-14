@@ -37,7 +37,7 @@
 <script>
 import Vue from 'vue'
 import DataV from '@jiaminghi/data-view'
-import axios from 'axios'
+import service from '@/api/index'
 
 Vue.use(DataV)
 
@@ -60,7 +60,7 @@ export default {
         return
       }
 
-      axios.get('http://localhost:18000/myApp/search-cars/', {
+      service.get('/myApp/search-cars/', {
         params: {
           name: this.carName
         }
@@ -93,7 +93,7 @@ export default {
       }
 
       // 发送表单数据到后端API
-      axios.post('http://localhost:18000/myApp/save_user_car_detail/', {
+      service.post('/myApp/save_user_car_detail/', {
         userId: this.userId,
         carName: this.carName,
         carModel: this.carModel,

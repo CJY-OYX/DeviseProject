@@ -29,7 +29,7 @@
 <script>
 import Vue from 'vue'
 import DataV from '@jiaminghi/data-view'
-import axios from 'axios'
+import service from '@/api/index'
 
 Vue.use(DataV)
 
@@ -76,7 +76,7 @@ export default {
         this.isSubmitting = false;
         return;
       }
-      axios.post('http://localhost:18000/myApp/register/', {
+      service.post('/myApp/register/', {
         username: this.username,
         password: this.password,
         confirmPassword: this.confirmPassword

@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import service from '@/api/index'
 
 export default {
   name: 'RegisterModal',
@@ -164,7 +164,7 @@ export default {
         return;
       }
 
-      axios.post('http://localhost:18000/myApp/register/', {
+      service.post('/myApp/register/', {
         username: this.username,
         password: this.password,
         confirmPassword: this.confirmPassword

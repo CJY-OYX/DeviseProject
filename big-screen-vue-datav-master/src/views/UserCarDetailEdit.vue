@@ -92,7 +92,7 @@
 <script>
 import Vue from 'vue'
 import DataV from '@jiaminghi/data-view'
-import axios from 'axios'
+import service from '@/api/index'
 import drawMixin from "../utils/drawMixin"
 
 Vue.use(DataV)
@@ -191,7 +191,7 @@ export default {
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('username');
       localStorage.removeItem('userRole');
-      this.$router.push('/login');
+      this.$router.push('/');
     },
     
     fetchCarDetail() {
@@ -206,7 +206,7 @@ export default {
       }
 
       // 请求用户车辆详情（与后端 urls.py 一致的下划线路径）
-      axios.post('http://localhost:18000/myApp/if_user_car_detail/', {
+      service.post('/myApp/if_user_car_detail/', {
         username: username
       })
       .then(response => {
@@ -256,7 +256,7 @@ export default {
         return
       }
 
-      axios.get('http://localhost:18000/myApp/search-cars/', {
+      service.get('/myApp/search-cars/', {
         params: {
           name: this.carName
         }
@@ -292,7 +292,7 @@ export default {
       }
 
       // 发送更新请求到后端API（与后端 urls.py 一致的下划线路径）
-      axios.post('http://localhost:18000/myApp/save_user_car_detail/', {
+      service.post('/myApp/save_user_car_detail/', {
         userId: this.userId,
         carName: this.carName,
         carModel: this.carModel,
