@@ -1,245 +1,498 @@
-# 车辆大屏可视化平台
+# 车辆大屏可视化项目部署说明
 
-## 一、项目概述
+## 1. 项目概览
 
-本项目围绕“汽车销售数据分析与可视化展示”这一应用场景展开设计与实现，旨在构建一个集数据采集、数据处理、数据库存储和大屏展示于一体的综合性信息化系统。系统以汽车销售数据为核心，通过对海量汽车数据的抓取、清洗与分析，帮助用户从品牌、车型、价格、销量、能源类型等多个维度实现对汽车市场的直观理解。
+本项目是一个基于 Django + Vue + ECharts/DataV 的汽车数据大屏展示系统，主要用于展示：
 
-项目采用前后端分离架构：
+- 汽车销量与品牌排行
+- 车型分布与能源结构
+- 价格区间与平均售价
+- 热门品牌和车型概览
+- 大屏可视化展示效果
 
-- 前端使用 Vue.js、ECharts 和 DataV 构建可视化大屏界面；
-- 后端使用 Django 搭建 Web API，负责数据查询与业务逻辑；
-- 数据层使用 MySQL 存储汽车信息；
-- 数据抓取部分采用 Python 爬虫技术，自动采集汽车相关数据并写入数据库。
+项目整体架构包括：
 
-本项目不仅能够展示汽车销售分析结果，还能够为后续扩展到商业决策支持、运营看板分析、市场趋势研究等场景提供基础支撑，适合作为毕业设计、课程作业或数据可视化项目���践的参考方案。
-
-## 二、研究背景与设计意义
-
-随着汽车行业竞争日益激烈，企业和运营团队对市场数据的分析需求日益增大。传统的统计报表方式往往存在数据更新慢、展示不直观、分析维度有限等问题，难以满足实时监控与大屏展示的应用需求。
-
-因此，本项目将数据可视化技术与汽车销售分析需求相结合，构建一个能快速展示关键业务指标的综合分析平台。该平台的意义主要体现在以下几个方面：
-
-1. 提升数据分析效率：通过图表和大屏风格界面，帮助使用者快速理解数据趋势；
-2. 直观展示业务状态：实时体现汽车品牌、车型、价格和销量等信息；
-3. 支持决策分析：为市场分析、产品规划和经营决策提供参考依据；
-4. 适合作为教学与实践项目：融合爬虫、后端开发、数据库设计和前端可视化等关键技术。
-
-## 三、系统目标
-
-本系统的主要目标包括：
-
-- 构建完整的汽车数据采集流程，自动获取目标平台汽车相关信息；
-- 实现数据清洗与结构化存储，确保数据可用于分析；
-- 建立汽车数据查询接口，支持大屏页各类统计指标的调用；
-- 实现可视化大屏展示，覆盖销量、排行、价格、品牌、能源类型等关键模块；
-- 提供可扩展、高复用的项目结构，方便二次开发与功能扩展。
-
-## 四、项目架构
-
-本项目采用“数据采集—数据存储—后端接口—前端展示”的整体架构：
-
-- 数据采集层：使用 Python 爬虫脚本抓取汽车数据；
-- 数据存储层：将清洗后的结构化数据存储到 MySQL 中；
-- 应用服务层：Django 负责接口开发、数据处理和后端交互；
-- 视图展示层：Vue + ECharts + DataV 构建响应式数据大屏页面；
-- 部署层：Nginx + Gunicorn 提供稳定部署环境。
-
-整体架构示意：
-
-```text
-爬虫脚本 -> 数据清洗 -> MySQL数据库 -> Django API -> Vue大屏前端
-                             \-> 数据分析与统计
-```
-
-## 五、功能模块设计
-
-### 5.1 数据采集模块
-
-该模块用于从目标网站抓取汽车相关数据，主要采集字段包括：
-
-- 品牌
-- 车名
-- 图片链接
-- 销量
-- 价格
-- 厂商
-- 排名
-- 车型
-- 能源类型
-- 上市时间
-- 保修期限
-
-通过定时或批量方式完成数据采集，并将数据保存在 CSV 文件或数据库中，方便后续分析和导入。
-
-### 5.2 数据处理模块
-
-采集到的数据往往存在重复项、空值、字段不统一���问题，因此本项目在数据库写入前进行了必要的数据清洗：
-
-- 去除空值与重复数据；
-- 统一字段命名；
-- 处理价格、销量等结构化字段；
-- 统计不同品牌和车型的分布情况。
-
-### 5.3 数据存储模块
-
-本项目使用 MySQL 作为主数据库，设计了关键数据表用于存储：
-
-- 车辆信息表：保存汽车基础信息；
-- 用户表：支持登录与权限相关场景；
-- 统计结果可由后端动态计算并返回。
-
-### 5.4 后端接口模块
-
-后端基于 Django 实现统一 API 接口，主要包括：
-
-- 获取总体统计数据；
-- 获取品牌排行数据；
-- 获取车型分布数据；
-- 获取能源结构比例；
-- 获取滚动排行榜和大屏图表数据。
-
-这些接口将数据按前端图表所需结构进行封装，响应 JSON 格式，便于 Vue 前端直接使用。
-
-### 5.5 前端大屏展示模块
-
-前端页面使用 Vue + ECharts + DataV 设计全屏展示效果，主要包含：
-
-- 中部数据概览区：总车量、排名最高车型、销量最高品牌等；
-- 轮播排行榜：品牌排名滚动展示；
-- 能源类型图：汽油、纯电动、混动比例分析；
-- 车型分布图：各类车型与销量关联；
-- 价格分布图：平均售价与价格区间分析；
-- 主题样式：深色大屏风格，适合数据看板展示。
-
-## 六、技术栈说明
-
-### 6.1 前端技术
-
-- Vue.js：构建页面组件和交互逻辑；
-- ECharts：实现各类图表展示；
-- DataV：增强大屏视觉效果和布局组件；
-- SCSS：样式管理与界面定制。
-
-### 6.2 后端技术
-
-- Python：处理数据逻辑与服务脚本；
-- Django：提供 API、数据库交互和后端业务控制；
-- MySQL：存储结构化数据；
-- requests / lxml：实现数据抓取与解析。
-
-### 6.3 部署技术
-
-- Nginx：静态资源托管与反向代理；
-- Gunicorn：Django 生产环境服务部署；
-- SSL / HTTPS：保证线上环境安全访问。
-
-## 七、关键实现思路
-
-### 7.1 数据抓取流程
-
-本项目的抓取逻辑重点在于：
-
-1. 构造请求头和请求参数；
-2. 发起页面请求；
-3. 解析返回的 JSON / HTML 数据；
-4. 提取关键字段；
-5. 保存到 CSV 或数据库中。
-
-由于目标网页采用分页和滚动加载机制，项目中设计了计数器或分页索引进行数据逐步抓取，并在失败时进行异常处理，提高数据采集稳定性。
-
-### 7.2 数据分析能力
-
-后端根据数据库中的汽车数据，针对以下指标进行计算：
-
-- 总车量；
-- 销量最高车型；
-- 车型分布；
-- 品牌排行；
-- 平均售价；
-- 能源类型占比。
-
-这些结果最终以 JSON 接口方式返回给前端，用于各类大屏图表组件。
-
-### 7.3 可视化设计思路
-
-项目前端采用“数据驱动渲染”的设计方法：
-
-- 后端接口返回结构化指标数据；
-- 前端组件根据返回结果动态更新图表配置；
-- 图表随数据刷新自动更新，达到数据可视化效果。
-
-通过这种设计方式，前端表现层与数据层解耦，提高了项目扩展能力和维护性。
-
-## 八、项目亮点
-
-1. 结合了数据采集、清洗、存储和展示的完整链路；
-2. 采用 Django + Vue 的常见工程化开发模式；
-3. 大屏展示效果突出，适合汇报和演示场景；
-4. 数据结构清晰便于二次开发；
-5. 适用于学习数据可视化、Web 后端和爬虫技术的综合实践。
-
-## 九、项目目录说明
-
-```text
-DeviseProject/
-├── big-screen-vue-datav-master/   # Vue 大屏前端
-├── myApp/                         # Django 应用模块
-├── spiderMan/                     # 爬虫脚本
-├── static/                       # 静态文件
-├── templates/                    # 模板文件
-├── manage.py                     # Django 命令入口
-├── requirements.txt             # Python 依赖
-├── README.md                    # 项目说明文档
-├── .gitignore                   # Git 忽略配置
-└── ...
-```
-
-## 十、部署与运行
-
-项目支持本地开发环境和服务器部署环境。开发环境可以直接运行：
-
-### 1. 后端启动
-
-```bash
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver 0.0.0.0:8000
-```
-
-### 2. 前端启动
-
-```bash
-cd big-screen-vue-datav-master
-npm install
-npm run serve
-```
-
-### 3. 生产部署
-
-项目中的 README 中已包含较完整的云服务器部署步骤，包括：
-
-- Ubuntu/CentOS 环境准备；
-- MySQL 初始化；
-- Django + Gunicorn 部署；
-- Vue 前端构建；
-- Nginx 配置；
-- SSL 与 HTTPS 配置；
-- 常见问题与维护说明。
-
-## 十一、总结与展望
-
-本项目从实际业务场景出发，结合汽车数据采集与大屏可视化展示，完成了一套完整的前后端协同开发实践。该系统在数据分析、可视化表达和项目工程化方面都具备较强的实际应用价值。
-
-在后续提升方向上，项目还可以继续扩展：
-
-- 增加用户权限管理模块；
-- 支持实时数据更新和自动抓取任务；
-- 引入更多多维度可视化分析；
-- 扩展到更广泛的行业数据看板应用；
-- 优化前端交互体验和响应式布局。
-
-本项目适合作为毕业设计题目、课程项目或个人作品展示，具有较好的技术实践和展示价值。
+- 前端：Vue.js + ECharts + DataV
+- 后端：Python + Django
+- 数据库：MySQL
+- 数据采集：Python 爬虫
+- 部署：Nginx + Gunicorn
 
 ---
 
-说明：本项目已保留原有部署说明内容，便于实际部署和二次开发使用；同时新增了更适合项目汇报与毕业设计展示的结构化说明。
+## 2. 运行环境要求
+
+### 2.1 服务器环境
+
+建议使用以下环境：
+
+- Ubuntu 20.04 / 22.04 LTS
+- 或 CentOS 7 / 8
+- CPU：至少 2 核
+- 内存：至少 4 GB
+- 磁盘：至少 50 GB SSD
+- 带宽：至少 5 Mbps
+
+### 2.2 本地开发环境
+
+- Node.js 14+
+- npm / yarn
+- Python 3.8+
+- Git
+- MySQL 5.7+
+- SSH 客户端
+
+---
+
+## 3. 服务器初始化
+
+### 3.1 连接服务器
+
+```bash
+ssh root@你的服务器IP
+```
+
+### 3.2 更新系统包
+
+Ubuntu / Debian：
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+CentOS：
+
+```bash
+sudo yum update -y
+```
+
+### 3.3 安装基础软件
+
+Ubuntu / Debian：
+
+```bash
+sudo apt install -y curl wget git vim nginx mysql-server python3-pip nodejs npm
+```
+
+CentOS：
+
+```bash
+sudo yum install -y curl wget git vim nginx mysql-server python3-pip nodejs npm
+```
+
+### 3.4 启动 MySQL
+
+```bash
+sudo systemctl start mysql
+sudo systemctl enable mysql
+```
+
+### 3.5 初始化数据库
+
+```bash
+sudo mysql -u root -p
+```
+
+在 MySQL 中执行：
+
+```sql
+CREATE DATABASE carData CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'cardata_user'@'localhost' IDENTIFIED BY '你的强密码';
+GRANT ALL PRIVILEGES ON carData.* TO 'cardata_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+---
+
+## 4. 项目拉取与目录准备
+
+### 4.1 拉取代码
+
+```bash
+mkdir -p /var/www
+cd /var/www
+git clone https://github.com/你的用户名/DeviseProject.git
+cd DeviseProject
+```
+
+### 4.2 查看项目结构
+
+```bash
+ls -la
+```
+
+常见目录说明：
+
+```text
+DeviseProject/
+├── big-screen-vue-datav-master/   # 前端项目
+├── myApp/                         # Django 应用
+├── spiderMan/                     # 爬虫脚本
+��── manage.py                      # Django 管理入口
+├── requirements.txt               # Python 依赖
+├── static/                        # 静态文件
+├── templates/                     # 模板目录
+├── README.md                      # 项目说明
+└── ...
+```
+
+---
+
+## 5. 后端部署（Django）
+
+### 5.1 创建 Python 虚拟环境
+
+```bash
+cd /var/www/DeviseProject
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 5.2 安装 Python 依赖
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+如果项目中有 Django 等依赖未安装，确保安装完整。
+
+### 5.3 配置 Django 项目
+
+打开项目的 settings 文件，确认以下配置：
+
+```python
+LANGUAGE_CODE = 'zh-hans'
+TIME_ZONE = 'Asia/Shanghai'
+USE_TZ = False
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'carData',
+        'USER': 'cardata_user',
+        'PASSWORD': '你的强密码',
+        'HOST': 'localhost',
+        'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
+    }
+}
+
+ALLOWED_HOSTS = ['你的服务器IP', 'localhost', '127.0.0.1']
+```
+
+如果项目中使用了 PyMySQL，需要在 Django 项目的 `__init__.py` 中加入：
+
+```python
+import pymysql
+pymysql.install_as_MySQLdb()
+```
+
+### 5.4 执行数据库迁移
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### 5.5 收集静态文件
+
+```bash
+python manage.py collectstatic --noinput
+```
+
+---
+
+## 6. 前端部署（Vue）
+
+### 6.1 进入前端目录
+
+```bash
+cd /var/www/DeviseProject/big-screen-vue-datav-master
+```
+
+### 6.2 安装依赖并打包
+
+```bash
+npm install
+npm run build
+```
+
+构建完成后，通常会生成 `dist/` 目录。
+
+### 6.3 复制静态资源到 Nginx 目录
+
+```bash
+sudo mkdir -p /var/www/vueapp
+sudo cp -r dist/* /var/www/vueapp/
+sudo chown -R www-data:www-data /var/www/vueapp
+```
+
+---
+
+## 7. Gunicorn 部署
+
+### 7.1 安装 Gunicorn
+
+```bash
+source /var/www/DeviseProject/venv/bin/activate
+pip install gunicorn
+```
+
+### 7.2 测试是否能启动
+
+```bash
+cd /var/www/DeviseProject
+gunicorn --bind 0.0.0.0:8000 project_name.wsgi:application
+```
+
+注意：将 `project_name` 替换成你的 Django 项目名。
+
+### 7.3 创建 systemd 服务
+
+```bash
+sudo vim /etc/systemd/system/gunicorn.service
+```
+
+内容示例如下：
+
+```ini
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/DeviseProject
+ExecStart=/var/www/DeviseProject/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/var/www/DeviseProject/project_name.sock project_name.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+```
+
+请将：
+
+- `project_name` 替换为你的实际 Django 项目名称
+- 工作目录和 sock 路径按实际情况调整
+
+### 7.4 启动 Gunicorn
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start gunicorn
+sudo systemctl enable gunicorn
+sudo systemctl status gunicorn
+```
+
+---
+
+## 8. Nginx 配置
+
+### 8.1 创建站点配置
+
+```bash
+sudo vim /etc/nginx/sites-available/your_domain.conf
+```
+
+示例配置：
+
+```nginx
+server {
+    listen 80;
+    server_name your_domain.com www.your_domain.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name your_domain.com www.your_domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/your_domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your_domain.com/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    root /var/www/vueapp;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://unix:/var/www/DeviseProject/project_name.sock;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+### 8.2 启用站点
+
+```bash
+sudo ln -s /etc/nginx/sites-available/your_domain.conf /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+---
+
+## 9. SSL 证书配置（可选）
+
+### 9.1 安装 Certbot
+
+Ubuntu / Debian：
+
+```bash
+sudo apt install certbot python3-certbot-nginx -y
+```
+
+CentOS：
+
+```bash
+sudo yum install certbot python3-certbot-nginx -y
+```
+
+### 9.2 申请证书
+
+```bash
+sudo certbot --nginx -d your_domain.com -d www.your_domain.com
+```
+
+### 9.3 测试自动续期
+
+```bash
+sudo certbot renew --dry-run
+```
+
+---
+
+## 10. 启动所有服务
+
+```bash
+sudo systemctl start mysql
+sudo systemctl start gunicorn
+sudo systemctl start nginx
+sudo systemctl enable mysql gunicorn nginx
+```
+
+---
+
+## 11. 验证部署结果
+
+### 11.1 前端访问
+
+```text
+https://your_domain.com
+```
+
+### 11.2 API 访问
+
+```text
+https://your_domain.com/api/center
+```
+
+### 11.3 查看服务状态
+
+```bash
+sudo systemctl status nginx gunicorn mysql
+```
+
+### 11.4 查看日志
+
+```bash
+sudo journalctl -u gunicorn -f
+sudo tail -f /var/log/nginx/error.log
+```
+
+---
+
+## 12. 常见问题排查
+
+### 12.1 端口占用
+
+```bash
+sudo netstat -tlnp | grep :80
+sudo netstat -tlnp | grep :443
+sudo kill -9 PID
+```
+
+### 12.2 Nginx 配置错误
+
+```bash
+sudo nginx -t
+sudo tail -f /var/log/nginx/error.log
+```
+
+### 12.3 Django 启动失败
+
+```bash
+cd /var/www/DeviseProject
+source venv/bin/activate
+python manage.py check
+```
+
+### 12.4 MySQL 连接失败
+
+检查以下内容：
+
+- MySQL 是否启动
+- 数据库名、用户名、密码是否正确
+- Django settings 中的 HOST / PORT / charset 是否配置正确
+
+### 12.5 静态资源无法加载
+
+```bash
+sudo chown -R www-data:www-data /var/www/vueapp
+sudo chmod -R 755 /var/www/vueapp
+```
+
+---
+
+## 13. 部署完成检查清单
+
+- [ ] 服务器环境准备完成
+- [ ] MySQL 数据库已创建
+- [ ] Django 依赖已安装
+- [ ] 数据库迁移成功
+- [ ] Vue 前端已构建并部署
+- [ ] Gunicorn 已启动并正常运行
+- [ ] Nginx 已配置站点并开启 HTTPS
+- [ ] 域名访问正常
+- [ ] API 接口返回正常
+- [ ] 日志可查看，服务状态正常
+
+---
+
+## 14. 说明
+
+本说明文档用于指导本项目在 Linux 服务器上的部署与运行，适用于：
+
+- 本地开发测试
+- 线上演示环境
+- 生产部署环境
+
+在真实部署中，仍需根据服务器环境、域名、证书和网络条件进行适当调整。
+
+如果后续需要进行二次开发或功能扩展，建议优先维护以下几个关键点：
+
+- Django settings 中的数据库与主机配置
+- 前端接口地址统一管理
+- Nginx 站点配置的反向代理规则
+- Gunicorn 进程管理与日志监控
+
+---
+
+此文档可作为本项目的部署说明书，适合直接放置在仓库根目录作为 README 使用。
